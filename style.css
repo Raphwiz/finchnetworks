@@ -1198,6 +1198,73 @@ button.loading::after {
     font-size: 2.2rem;
   }
 }
+/* ============================= */
+/* GLOBAL COMPACT SPACING */
+/* ============================= */
+
+section {
+  padding-top: 60px;
+  padding-bottom: 60px;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding-top: 45px;
+    padding-bottom: 45px;
+  }
+}
+h1, h2, h3 {
+  margin-bottom: 16px;
+}
+
+p {
+  margin-bottom: 12px;
+}
+/* Compact Why Choose spacing */
+.why-us {
+  padding-top: 65px;
+  padding-bottom: 65px;
+}
+
+.why-grid {
+  margin-bottom: 45px;
+}
+
+.why-stats {
+  margin-top: 30px;
+}
+/* Compact Services */
+.services {
+  padding-top: 60px;
+  padding-bottom: 60px;
+}
+
+.service-tabs {
+  margin-bottom: 25px;
+}
+
+.tab-content {
+  margin-top: 15px;
+}
+.hero {
+  padding-top: 90px;
+  padding-bottom: 90px;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding-top: 70px;
+    padding-bottom: 70px;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
 
 
 
