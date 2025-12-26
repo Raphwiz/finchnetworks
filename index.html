@@ -343,43 +343,38 @@
 </script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const counters = document.querySelectorAll(".counter");
+document.addEventListener("DOMContentLoaded", function () {
+  const counters = document.querySelectorAll(".counter");
 
-    counters.forEach(counter => {
-      const target = parseInt(counter.dataset.target, 10);
-      let current = 0;
-      const increment = Math.max(1, Math.floor(target / 80));
+  counters.forEach(counter => {
+    const target = parseInt(counter.getAttribute("data-target"), 10);
+    let current = 0;
 
-      const update = () => {
-        current += increment;
+    const stepTime = 20; // time between increments
+    const increment = Math.ceil(target / (200 / stepTime)); // smooth speed
 
-        if (current >= target) {
-          counter.innerText = target;
+    function updateCount() {
+      current = current + increment;
+      if (current >= target) {
+        counter.textContent = target;
+        counter.classList.add("bounce");
 
-          // Number bounce
-          counter.classList.add("bounce");
-          setTimeout(() => counter.classList.remove("bounce"), 600);
-
-          // Icon pulse
-          const stat = counter.closest(".stat");
-          if (stat) {
-            stat.classList.add("pulse");
-            setTimeout(() => stat.classList.remove("pulse"), 600);
-          }
-
-          return;
+        // icon pulse
+        const statCard = counter.closest(".stat");
+        if (statCard) {
+          statCard.classList.add("pulse");
+          setTimeout(() => statCard.classList.remove("pulse"), 600);
         }
-
-        counter.innerText = current;
-        setTimeout(update, 20);
-      };
-
-      update();
-    });
+      } else {
+        counter.textContent = current;
+        setTimeout(updateCount, stepTime);
+      }
+    }
+    
+    updateCount();
   });
+});
 </script>
-
 
 
 </body>
@@ -429,4 +424,5 @@
 
 </body>
 </html>
+
 
