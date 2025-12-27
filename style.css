@@ -38,6 +38,18 @@ body::before {
   pointer-events: none;
 }
 
+/* HERO – SINGLE SOURCE OF TRUTH */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  padding: 90px 20px;
+  background-image: url("cam.webp");
+  background-size: cover;
+  background-position: 65% center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+}
 
 /* WhatsApp Button */
 .whatsapp-float {
@@ -52,37 +64,6 @@ body::before {
   text-decoration: none;
   z-index: 999;
 }
-/* HERO BACKGROUND – FINAL */
-.hero {
-  position: relative;
-  min-height: 100vh;
-  padding: 90px 20px;
-  background-image: url("cam.webp");
-  background-size: cover;
-  background-position: center right;
-  background-repeat: no-repeat;
-  display: flex;
-  align-items: center;
-}
-
-/* Dark overlay */
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to right,
-    rgba(11, 15, 25, 0.92),
-    rgba(11, 15, 25, 0.6),
-    rgba(11, 15, 25, 0.25)
-  );
-  z-index: 1;
-}
-
-/* Bring content above overlay */
-.hero > * {
-  position: relative;
-  z-index: 2;
 }
 
 .navbar {
@@ -122,11 +103,6 @@ body::before {
   padding: 14px 28px;
   border-radius: 6px;
   font-weight: 700;
-}
-
-
-.hero-image img {
-  max-width: 360px;
 }
 
 /* SECTIONS */
@@ -529,12 +505,6 @@ footer {
   text-align: center;
   font-size: 0.9rem;
 }
-
-/* MOBILE */
-@media (max-width: 768px) {
-  .hero-text h1 {
-    font-size: 2rem;
-  }
 }
 /* WhatsApp Floating Button */
 .whatsapp-float {
@@ -624,20 +594,6 @@ footer {
   border-bottom-color: #ffffff;
 }
 
-
-@media (max-width: 768px) {
-  .hero-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .hero-image img {
-    max-width: 260px;
-  }
-
-  .hero-text h1 {
-    font-size: 2rem;
-  }
 }
 section h2 {
   font-size: 2.2rem;
@@ -1225,36 +1181,6 @@ p {
 .tab-content {
   margin-top: 15px;
 }
-.hero {
-  padding-top: 90px;
-  padding-bottom: 90px;
-}
-
-@media (max-width: 768px) {
-  .hero {
-    padding-top: 70px;
-    padding-bottom: 70px;
-  }
-}
-@media (max-width: 900px) {
-  .hero-content {
-    padding-top: 60px;
-  }
-
-  .hero-text h1 {
-    font-size: 32px;
-    line-height: 1.25;
-  }
-
-  .hero-text p {
-    font-size: 16px;
-  }
-
-  .hero-buttons {
-    justify-content: center;
-  }
-}
-
 
 * {
   box-sizing: border-box;
@@ -1412,153 +1338,6 @@ body {
   background: #084298;
 }
 
-.hero-content {
-  max-width: 1200px;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 50px;
-}
-
-.hero-text {
-  flex: 1;
-}
-
-.hero-text h1 {
-  font-size: 42px;
-  line-height: 1.2;
-}
-
-.hero-text p {
-  font-size: 18px;
-  margin: 20px 0;
-  color: #ccc;
-}
-
-/* BUTTONS */
-.hero-buttons {
-  display: flex;
-  gap: 15px;
-  margin-top: 25px;
-}
-
-/* IMAGE SIDE */
-.hero-image {
-  flex: 1;
-  text-align: center;
-}
-
-.hero-image img {
-  max-width: 100%;
-  height: auto;
-  max-height: 420px;
-  object-fit: contain;
-}
-.hero-text {
-  text-align: left;
-  max-width: 560px;
-}
-
-@media (max-width: 900px) {
-  .hero-text {
-    text-align: center;
-    margin: auto;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .hero-image img {
-    max-height: 300px;
-    margin-top: 30px;
-  }
-
-  .hero-buttons {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-}
-
-@media (max-width: 900px) {
-  .hero {
-    background-position: 65% center;
-  }
-}
-/* ============================= */
-/* HERO BACKGROUND – FINAL FIX */
-/* ============================= */
-
-.hero {
-  position: relative;
-  min-height: 100vh;
-  padding: 90px 20px;
-  background-image: url("cam.webp");
-  background-size: cover;
-  background-position: center right;
-  background-repeat: no-repeat;
-  display: flex;
-  align-items: center;
-}
-
-/* Dark overlay */
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to right,
-    rgba(11, 15, 25, 0.92),
-    rgba(11, 15, 25, 0.6),
-    rgba(11, 15, 25, 0.25)
-  );
-  z-index: 1;
-}
-
-/* Bring hero content above overlay */
-.hero > * {
-  position: relative;
-  z-index: 2;
-}
-/* Desktop hero balance fix */
-@media (min-width: 1024px) {
-  .hero-content {
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 80px; /* key fix */
-  }
-}
-
-/* ============================= */
-/* HERO – MOBILE OPTIMIZATION */
-/* ============================= */
-
-@media (max-width: 900px) {
-  .hero {
-    min-height: 90vh;
-
-    /* Reposition background for phones */
-    background-position: center top;
-
-    /* Slight zoom-out to avoid cropping */
-    background-size: 120%;
-  }
-}
-
-.hero-text h1 span {
-  display: block;
-  margin-top: 10px;
-  font-weight: 600;
-  color: #f7c600; /* brand yellow accent */
-}
-.hero-buttons a {
-  min-width: 260px;
-  text-align: center;
-}
 /* Shared alignment container */
 .align-line {
   max-width: 1200px;
@@ -1566,6 +1345,7 @@ body {
   padding-left: 20px;
   padding-right: 20px;
 }
+
 
 
 
