@@ -1443,6 +1443,17 @@ body {
   max-height: 420px;
   object-fit: contain;
 }
+.hero-text {
+  text-align: left;
+  max-width: 560px;
+}
+
+@media (max-width: 900px) {
+  .hero-text {
+    text-align: center;
+    margin: auto;
+  }
+}
 
 @media (max-width: 900px) {
   .hero-content {
@@ -1517,6 +1528,7 @@ body {
     background-size: 120%;
   }
 }
+
 
 
 
