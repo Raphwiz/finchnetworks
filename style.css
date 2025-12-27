@@ -1529,6 +1529,13 @@ body {
   }
 }
 
+.hero-text h1 span {
+  display: block;
+  margin-top: 10px;
+  font-weight: 600;
+  color: #f7c600; /* brand yellow accent */
+}
+
 
 
 
