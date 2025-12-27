@@ -1380,12 +1380,6 @@ body {
   background: #084298;
 }
 
-/* HERO LAYOUT */
-.hero {
-  padding: 80px 20px;
-  background: #0b0f19; /* or your existing hero background */
-}
-
 .hero-content {
   max-width: 1200px;
   margin: auto;
@@ -1452,6 +1446,42 @@ body {
     background-position: center;
   }
 }
+/* ============================= */
+/* HERO BACKGROUND – FINAL FIX */
+/* ============================= */
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  padding: 90px 20px;
+  background-image: url("cam.webp");
+  background-size: cover;
+  background-position: center right;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+}
+
+/* Dark overlay */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(11, 15, 25, 0.92),
+    rgba(11, 15, 25, 0.6),
+    rgba(11, 15, 25, 0.25)
+  );
+  z-index: 1;
+}
+
+/* Bring hero content above overlay */
+.hero > * {
+  position: relative;
+  z-index: 2;
+}
+
 
 
 
