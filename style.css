@@ -1486,7 +1486,7 @@ body {
 
 @media (max-width: 900px) {
   .hero {
-    background-position: center;
+    background-position: 65% center;
   }
 }
 /* ============================= */
@@ -1524,6 +1524,14 @@ body {
   position: relative;
   z-index: 2;
 }
+/* Desktop hero balance fix */
+@media (min-width: 1024px) {
+  .hero-content {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 80px; /* key fix */
+  }
+}
 
 /* ============================= */
 /* HERO – MOBILE OPTIMIZATION */
@@ -1551,6 +1559,7 @@ body {
   min-width: 260px;
   text-align: center;
 }
+
 
 
 
