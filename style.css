@@ -1236,6 +1236,26 @@ p {
     padding-bottom: 70px;
   }
 }
+@media (max-width: 900px) {
+  .hero-content {
+    padding-top: 60px;
+  }
+
+  .hero-text h1 {
+    font-size: 32px;
+    line-height: 1.25;
+  }
+
+  .hero-text p {
+    font-size: 16px;
+  }
+
+  .hero-buttons {
+    justify-content: center;
+  }
+}
+
+
 * {
   box-sizing: border-box;
 }
@@ -1480,6 +1500,22 @@ body {
 .hero > * {
   position: relative;
   z-index: 2;
+}
+
+/* ============================= */
+/* HERO – MOBILE OPTIMIZATION */
+/* ============================= */
+
+@media (max-width: 900px) {
+  .hero {
+    min-height: 90vh;
+
+    /* Reposition background for phones */
+    background-position: center top;
+
+    /* Slight zoom-out to avoid cropping */
+    background-size: 120%;
+  }
 }
 
 
