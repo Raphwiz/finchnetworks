@@ -1380,10 +1380,22 @@ body {
   cursor: pointer;
 }
 .internal-link {
-  color: #0b5ed7;
-  font-weight: 500;
-  text-decoration: underline;
+  display: inline-block;
+  background: transparent;
+  border: 2px solid #f7c600;
+  color: #f7c600;
+  padding: 14px 22px;
+  border-radius: 6px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
+
+.internal-link:hover {
+  background: #f7c600;
+  color: #000;
+}
+
 
 .cta-link {
   display: inline-block;
@@ -1535,6 +1547,11 @@ body {
   font-weight: 600;
   color: #f7c600; /* brand yellow accent */
 }
+.hero-buttons a {
+  min-width: 260px;
+  text-align: center;
+}
+
 
 
 
