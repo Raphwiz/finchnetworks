@@ -239,48 +239,54 @@
   </div>
 </section>
 	
-<script>
-  const testimonials = document.querySelectorAll('.testimonial-card');
-  const dots = document.querySelectorAll('.dot');
-  const carousel = document.querySelector('.testimonial-carousel');
+<section class="testimonials">
+  <div class="container">
+    <h2>What Our Clients Say</h2>
+    <p class="subtitle">Trusted by homes and businesses across Kenya</p>
 
-  let index = 0;
-  let interval;
+    <div class="testimonial-carousel">
 
-  function showTestimonial(i) {
-    testimonials.forEach((card, idx) => {
-      card.classList.toggle('active', idx === i);
-      dots[idx].classList.toggle('active', idx === i);
-    });
-  }
+      <div class="testimonial-card active">
+        <div class="stars">★★★★★</div>
+        <p class="message">
+          “Finch Networks Ltd did a very clean and professional CCTV installation in my shop.
+          The cameras are clear, and I can monitor everything from my phone. Highly recommended.”
+        </p>
+        <h4>James M.</h4>
+        <span>Retail Shop Owner – Meru</span>
+      </div>
 
-  function startAutoSlide() {
-    interval = setInterval(() => {
-      index = (index + 1) % testimonials.length;
-      showTestimonial(index);
-    }, 5000);
-  }
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="message">
+          “They advised me on the best camera positions and completed the work on time.
+          I now feel much safer at home thanks to Finch Networks Ltd.”
+        </p>
+        <h4>Grace W.</h4>
+        <span>Homeowner</span>
+      </div>
 
-  function stopAutoSlide() {
-    clearInterval(interval);
-  }
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="message">
+          “From site visit to installation and after-sales support, everything was handled professionally.
+          The system works perfectly.”
+        </p>
+        <h4>David K.</h4>
+        <span>Office Administrator</span>
+      </div>
 
-  // Start autoplay
-  startAutoSlide();
+    </div>
 
-  // Pause on hover
-  carousel.addEventListener('mouseenter', stopAutoSlide);
-  carousel.addEventListener('mouseleave', startAutoSlide);
+    <!-- Dots -->
+    <div class="carousel-dots">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
 
-  // Dot navigation
-  dots.forEach((dot, i) => {
-    dot.addEventListener('click', () => {
-      index = i;
-      showTestimonial(index);
-    });
-  });
-</script>
-
+  </div>
+</section>
 	
 
 <!-- FINAL CTA -->
@@ -418,11 +424,14 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
-
+	
 <script>
   const testimonials = document.querySelectorAll('.testimonial-card');
   const dots = document.querySelectorAll('.dot');
+  const carousel = document.querySelector('.testimonial-carousel');
+
   let index = 0;
+  let interval;
 
   function showTestimonial(i) {
     testimonials.forEach((card, idx) => {
@@ -431,22 +440,32 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  function autoSlide() {
-    index = (index + 1) % testimonials.length;
-    showTestimonial(index);
+  function startAutoSlide() {
+    interval = setInterval(() => {
+      index = (index + 1) % testimonials.length;
+      showTestimonial(index);
+    }, 5000);
   }
 
+  function stopAutoSlide() {
+    clearInterval(interval);
+  }
+
+  // Start autoplay
+  startAutoSlide();
+
+  // Pause on hover
+  carousel.addEventListener('mouseenter', stopAutoSlide);
+  carousel.addEventListener('mouseleave', startAutoSlide);
+
+  // Dot navigation
   dots.forEach((dot, i) => {
     dot.addEventListener('click', () => {
       index = i;
       showTestimonial(index);
     });
   });
-
-  setInterval(autoSlide, 5000); // change every 5 seconds
 </script>
-
-	
 	
 </body>
 </section>
@@ -495,6 +514,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
 
 
