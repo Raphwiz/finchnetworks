@@ -38,6 +38,12 @@ body::before {
   pointer-events: none;
 }
 
+.hero-text {
+  text-align: left;
+  max-width: 560px;
+}
+
+
 /* HERO – SINGLE SOURCE OF TRUTH */
 .hero {
   position: relative;
@@ -50,6 +56,14 @@ body::before {
   display: flex;
   align-items: center;
 }
+
+@media (max-width: 900px) {
+  .hero-text {
+    text-align: center;
+    margin: auto;
+  }
+}
+
 
 /* WhatsApp Button */
 .whatsapp-float {
@@ -71,6 +85,17 @@ body::before {
   justify-content: space-between;
   margin-bottom: 40px;
 }
+
+/* LOCK NAVBAR & HERO TO SAME COLUMN */
+.navbar,
+.hero-content {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
 
 .btn-call {
   background: #f7c600;
@@ -1345,6 +1370,7 @@ body {
   padding-left: 20px;
   padding-right: 20px;
 }
+
 
 
 
