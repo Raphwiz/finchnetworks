@@ -428,7 +428,35 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script>
+  const testimonials = document.querySelectorAll('.testimonial-card');
+  const dots = document.querySelectorAll('.dot');
+  let index = 0;
 
+  function showTestimonial(i) {
+    testimonials.forEach((card, idx) => {
+      card.classList.toggle('active', idx === i);
+      dots[idx].classList.toggle('active', idx === i);
+    });
+  }
+
+  function autoSlide() {
+    index = (index + 1) % testimonials.length;
+    showTestimonial(index);
+  }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      index = i;
+      showTestimonial(index);
+    });
+  });
+
+  setInterval(autoSlide, 5000); // change every 5 seconds
+</script>
+
+	
+	
 </body>
 </section>
 
@@ -476,6 +504,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
 
 
