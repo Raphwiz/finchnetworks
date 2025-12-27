@@ -235,7 +235,7 @@ section {
   background: rgba(10, 15, 35, 0.95);
 }
 
-.lead-container /* Tabs Container */
+/* Tabs Container */
 .service-tabs {
   max-width: 900px;
   margin: 30px auto;
@@ -1452,6 +1452,7 @@ body {
     background-position: center;
   }
 }
+
 
 
 
