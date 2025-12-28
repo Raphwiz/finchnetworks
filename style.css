@@ -1008,12 +1008,6 @@ p {
 .tab-content {
   margin-top: 15px;
 }
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-}
 .testimonials {
   background: #f8f9fb;
   padding: 70px 20px;
@@ -1139,6 +1133,7 @@ body {
 .cta-link:hover {
   background: #084298;
 }
+
 
 
 
