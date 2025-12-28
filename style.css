@@ -247,3 +247,284 @@ section {
     font-size: 16px;
   }
 }
+/* ============================= */
+/* SERVICES TABS – FINAL */
+/* ============================= */
+
+.service-tabs {
+  max-width: 900px;
+  margin: 35px auto 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.service-tabs .tab-btn {
+  padding: 14px 18px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.service-tabs .tab-btn:hover {
+  background: rgba(247,198,0,0.15);
+}
+
+.service-tabs .tab-btn.active {
+  background: #f7c600;
+  color: #000;
+  border-color: #f7c600;
+  box-shadow: 0 8px 18px rgba(247,198,0,0.35);
+}
+
+/* Tab Content */
+.tab-content {
+  max-width: 760px;
+  margin: 20px auto 0;
+  background: rgba(18,26,53,0.9);
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.tab-content h3 {
+  color: #f7c600;
+  margin-bottom: 12px;
+}
+/* ============================= */
+/* HOW IT WORKS – FLOW */
+/* ============================= */
+
+.process {
+  background: rgba(14,21,48,0.9);
+}
+
+.process-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 48px;
+  margin-top: 40px;
+  position: relative;
+}
+
+.process-step {
+  background: rgba(18,26,53,0.85);
+  padding: 28px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.process-step:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+
+/* Arrow connectors (desktop only) */
+.process-step::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -24px;
+  width: 48px;
+  height: 2px;
+  background: rgba(247,198,0,0.35);
+  transform: translateY(-50%);
+}
+
+.process-step::before {
+  content: "➜";
+  position: absolute;
+  top: 50%;
+  right: -32px;
+  color: rgba(247,198,0,0.7);
+  font-size: 1.2rem;
+  transform: translateY(-50%);
+}
+
+.process-step:last-child::before,
+.process-step:last-child::after {
+  display: none;
+}
+
+.step-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.process-step h3 {
+  color: #f7c600;
+  margin-bottom: 10px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .process-step::before,
+  .process-step::after {
+    display: none;
+  }
+}
+/* ============================= */
+/* WHY CHOOSE US */
+/* ============================= */
+
+.why-us {
+  padding: 80px 20px;
+  background: rgba(12,18,40,0.95);
+  text-align: center;
+}
+
+.why-grid {
+  max-width: 1100px;
+  margin: 0 auto 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 30px;
+}
+
+.why-card {
+  background: rgba(18,26,53,0.9);
+  border-radius: 16px;
+  padding: 32px 24px;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.3s ease;
+}
+
+.why-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+
+.why-icon {
+  font-size: 2.6rem;
+  margin-bottom: 14px;
+}
+
+.why-card h3 {
+  color: #f7c600;
+  margin-bottom: 10px;
+}
+
+.why-card p {
+  color: rgba(255,255,255,0.9);
+  font-size: 0.95rem;
+}
+
+/* Stats */
+.why-stats {
+  max-width: 900px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+}
+
+.stat {
+  background: rgba(18,26,53,0.9);
+  border-radius: 16px;
+  padding: 28px 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.stat h4 {
+  font-size: 2.6rem;
+  color: #f7c600;
+  font-weight: 800;
+}
+/* ============================= */
+/* TESTIMONIALS */
+/* ============================= */
+
+.testimonials {
+  background: #f8f9fb;
+  padding: 70px 20px;
+}
+
+.testimonials h2 {
+  color: #111;
+}
+
+.testimonials .subtitle {
+  color: #666;
+  margin-bottom: 40px;
+}
+
+.testimonial-carousel {
+  max-width: 700px;
+  margin: auto;
+}
+
+.testimonial-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  display: none;
+}
+
+.testimonial-card.active {
+  display: block;
+}
+
+.stars {
+  color: #f4b400;
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.testimonial-card .message {
+  font-style: italic;
+  color: #444;
+  margin-bottom: 20px;
+}
+/* ============================= */
+/* LEAD / QUOTE FORM */
+/* ============================= */
+
+.lead-section {
+  padding: 80px 20px;
+  background: rgba(10,15,35,0.95);
+}
+
+.lead-form {
+  max-width: 520px;
+}
+
+.lead-form h2 span {
+  color: #f7c600;
+}
+
+.lead-form input,
+.lead-form textarea {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 14px;
+  border-radius: 8px;
+  color: #fff;
+}
+
+.lead-form button {
+  background: #f7c600;
+  color: #000;
+  padding: 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lead-form button:hover {
+  background: #ffd633;
+}
+
