@@ -893,6 +893,18 @@ section {
   opacity: 1;
   transform: translateY(0);
 }
+/* Reduce space below Free Site Visit section */
+.final-cta {
+  padding-bottom: 30px; /* was effectively ~60px */
+}
+/* Reduce space above Benefits */
+.benefits {
+  padding-top: 40px; /* instead of default 80px */
+}
+.website-link {
+  margin-top: 12px;
+}
+
 
 
 
