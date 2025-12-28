@@ -139,15 +139,6 @@ section {
   animation: fadeUp 0.8s ease both;
 }
 
-/* Services Tabs */
-.service-tabs {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin: 30px 0;
-}
-
 .tab-btn .tab-btn {
   width: 100%;
   padding: 14px 16px;
@@ -735,18 +726,11 @@ section h2 span {
     font-size: 1.15rem;
   }
 }
-@media (max-width: 480px) {
-  .service-tabs {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .tab-btn {
     font-size: 0.9rem;
     padding: 12px;
   }
 }
-
-
 /* Bottom Contact Bar */
 .bottom-contact-bar {
   position: fixed;
@@ -1370,6 +1354,7 @@ body {
   padding-left: 20px;
   padding-right: 20px;
 }
+
 
 
 
