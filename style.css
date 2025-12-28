@@ -645,27 +645,33 @@ section {
 }
 
 /* ============================= */
-/* PRIVACY CHECKBOX ALIGNMENT */
+/* PRIVACY CHECKBOX – FINAL FIX */
 /* ============================= */
 
 .lead-form .privacy {
-  display: flex;
-  align-items: flex-start;
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
   font-size: 0.85rem;
-  line-height: 1.4;
-  color: rgba(255,255,255,0.85);
-  margin-bottom: 22px;
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
 }
 
 .lead-form .privacy input[type="checkbox"] {
-  margin-top: 3px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
   accent-color: #f7c600;
+}
+
+.lead-form .privacy span {
+  line-height: 1.4;
 }
 
 .lead-form .privacy a {
   color: #f7c600;
   font-weight: 600;
+  text-decoration: underline;
 }
 
 /* Submit Button */
@@ -711,6 +717,7 @@ section {
     padding: 30px 24px;
   }
 }
+
 
 
 
