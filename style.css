@@ -874,6 +874,26 @@ section {
     right: 16px;
   }
 }
+.whatsapp-float::before {
+  content: "Chat with us";
+  position: absolute;
+  right: 70px;
+  background: #111;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: all 0.3s ease;
+}
+
+.whatsapp-float:hover::before {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 
 
 
