@@ -786,6 +786,33 @@ section {
     padding: 30px 22px;
   }
 }
+/* ============================= */
+/* TESTIMONIAL NAME VISIBILITY FIX */
+/* ============================= */
+
+.testimonial-card h4 {
+  margin-top: 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111; /* dark, readable */
+}
+
+.testimonial-card span {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #666; /* subtle secondary text */
+}
+.testimonial-card h4::before {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: #f7c600;
+  margin: 18px auto 10px;
+  border-radius: 3px;
+}
+
 
 
 
