@@ -84,6 +84,31 @@ body::before {
   padding-left: 20px;
   padding-right: 20px;
 }
+/* NAVBAR CENTERING */
+.navbar {
+  display: flex;
+  justify-content: center;
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+/* HERO CONTENT LEFT-ALIGNED */
+.hero-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 20px 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.hero-text {
+  text-align: left;
+  max-width: 560px;
+}
 .btn-call {
   background: #f7c600;
   color: #000;
@@ -1133,6 +1158,21 @@ p {
 .cta-link:hover {
   background: #084298;
 }
+@media (max-width: 900px) {
+  .navbar {
+    justify-content: center;
+  }
+
+  .hero-text {
+    text-align: center;
+    margin: auto;
+  }
+
+  .hero-buttons {
+    justify-content: center;
+  }
+}
+
 
 
 
