@@ -644,17 +644,28 @@ section {
   background: rgba(255,255,255,0.12);
 }
 
-/* Privacy checkbox */
+/* ============================= */
+/* PRIVACY CHECKBOX ALIGNMENT */
+/* ============================= */
+
 .lead-form .privacy {
-  font-size: 0.85rem;
-  margin-bottom: 20px;
   display: flex;
-  gap: 8px;
   align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 22px;
+}
+
+.lead-form .privacy input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: #f7c600;
 }
 
 .lead-form .privacy a {
   color: #f7c600;
+  font-weight: 600;
 }
 
 /* Submit Button */
@@ -683,6 +694,14 @@ section {
   font-weight: 600;
   text-align: center;
 }
+/* ============================= */
+/* SUCCESS MESSAGE – HIDDEN */
+/* ============================= */
+
+.success-message {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .lead-container {
     grid-template-columns: 1fr;
@@ -692,5 +711,6 @@ section {
     padding: 30px 24px;
   }
 }
+
 
 
