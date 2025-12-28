@@ -1172,6 +1172,31 @@ p {
     justify-content: center;
   }
 }
+/* SHARED LAYOUT GRID */
+.layout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* NAVBAR CENTERED */
+.navbar-inner {
+  display: flex;
+  justify-content: center;
+}
+
+/* HERO LEFT-ALIGNED */
+.hero-content {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 80px;
+}
+
+.hero-text {
+  text-align: left;
+  max-width: 560px;
+}
+
 
 
 
