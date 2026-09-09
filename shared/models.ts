@@ -1,6 +1,8 @@
 export type Product={id:string;name:string;category:string;description:string;price:number|null;image:string;published:boolean;unit:string;availability:string};
 export type Project={id:string;title:string;category:string;location:string;description:string;image:string;published:boolean};
-export type Settings={phone:string;email:string;area:string};
+export type Settings={phone:string;email:string;area:string;tiktok:string;youtube:string;x:string;instagram:string};
+export const socialFields=[{key:'tiktok',label:'TikTok'},{key:'youtube',label:'YouTube'},{key:'x',label:'X'},{key:'instagram',label:'Instagram'}] as const;
+export const defaultSettings:Settings={phone:'+254707625129',email:'Finchnetworksltd@gmail.com',area:'',tiktok:'',youtube:'',x:'',instagram:''};
 export type Line={id:string;name:string;quantity:number;unit:string;unitPrice:number|null;total:number|null};
 export type Calculation={lines:Line[];subtotal:number;hasUnpriced:boolean;note:string};
 export const categories=['CCTV & repairs','Electric fences','Automatic gates','Office networking','Starlink'];
