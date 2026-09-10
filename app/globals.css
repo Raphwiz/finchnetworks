@@ -38,3 +38,4 @@ body{background:#f5f9fc;color:#153044}.header{background:#fff;border-bottom:1px 
 @media(max-width:1000px){.cctv-layout{grid-template-columns:1fr}.cctv-controls{max-width:none}.cctv-choices{flex-wrap:nowrap}.cctv-choice{flex-basis:0}}
 @media(max-width:620px){.cctv-choices{flex-wrap:wrap}.cctv-choice{flex-basis:100px}.cctv-total{align-items:flex-start;flex-direction:column;gap:6px}.cctv-count label{font-size:14px}.cctv-basket{padding:20px 14px}.cctv-table td{padding:11px 8px}}
 .cctv-controls .cctv-choices{flex-wrap:wrap}.cctv-controls .cctv-choice{flex:1 1 110px}
+.cctv-addon{background:#edf7f4;border:1px solid #bdded2;border-radius:10px;padding:16px;margin:12px 0 22px}.cctv-addon .cctv-options:first-child{margin-top:0}.cctv-addon .cctv-choice{margin:0;padding:10px;flex-basis:90px}.cctv-addon .cctv-choice.chosen{padding:9px}.cctv-addon .helper{font-size:13px;margin-bottom:0}.cctv-addon legend{font-size:14px}
