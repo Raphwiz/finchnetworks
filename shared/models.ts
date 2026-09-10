@@ -1,4 +1,4 @@
-export type Product={id:string;name:string;category:string;description:string;price:number|null;image:string;published:boolean;unit:string;availability:string};
+export type Product={featured?:boolean;id:string;name:string;category:string;description:string;price:number|null;image:string;published:boolean;unit:string;availability:string};
 export type Project={id:string;title:string;category:string;location:string;description:string;image:string;published:boolean};
 export type Settings={phone:string;email:string;area:string;tiktok:string;youtube:string;x:string;instagram:string};
 export const socialFields=[{key:'tiktok',label:'TikTok'},{key:'youtube',label:'YouTube'},{key:'x',label:'X'},{key:'instagram',label:'Instagram'}] as const;
