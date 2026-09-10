@@ -27,3 +27,7 @@ body{background:#f5f9fc;color:#153044}.header{background:#fff;border-bottom:1px 
 .service-strip{gap:10px;padding-top:16px;padding-bottom:16px;grid-template-columns:repeat(5,minmax(0,1fr))}.service-strip a{padding:9px 12px;border-radius:7px;gap:8px;min-height:40px;font-size:14px;font-weight:600;line-height:1.4}.service-strip a>svg:first-child{width:18px;height:18px}.service-strip a>svg:last-child{width:14px;height:14px}.filter-tabs{padding:4px!important;gap:4px!important}.filter-tabs button{padding:7px 12px!important;font-size:14px!important;min-height:34px;line-height:1.4}
 @media(max-width:1100px){.service-strip{display:flex;flex-wrap:wrap}.service-strip a{flex:0 1 auto}.service-strip a>svg:last-child{display:none}}
 @media(max-width:620px){.service-strip{gap:8px;padding-top:14px;padding-bottom:14px}.service-strip a{padding:8px 10px;min-height:36px;font-size:14px}.filter-tabs button{padding:7px 10px!important}}
+/* Fixed service photographs; all five panels are stored with the website. */
+.service-strip a{padding:6px 10px 6px 6px;min-height:48px;gap:9px}.service-thumb{display:block;flex:0 0 34px;width:34px;height:34px;border-radius:6px;background-image:url('/service-thumbnails.webp');background-size:500% auto;background-repeat:no-repeat;border:1px solid #ffffffa6;box-shadow:0 1px 4px #18384112}.service-strip a>svg:last-child{margin-left:auto}
+@media(max-width:620px){.service-strip a{padding:6px 9px 6px 6px;min-height:46px;gap:8px}.service-thumb{flex-basis:32px;width:32px;height:32px}}
+
