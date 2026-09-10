@@ -42,3 +42,14 @@ body{background:#f5f9fc;color:#153044}.header{background:#fff;border-bottom:1px 
 .cctv-compact-heading .page-heading{padding:16px 22px;margin-bottom:22px;border-radius:10px;border-left-width:4px}.cctv-compact-heading .page-heading .eyebrow{font-size:11px;margin-bottom:5px;letter-spacing:.1em}.cctv-compact-heading .page-heading h1{font-size:28px;line-height:1.2;margin-bottom:6px;letter-spacing:-.025em}.cctv-compact-heading .page-heading p{font-size:14px;line-height:1.5;margin:0}
 @media(max-width:620px){.cctv-compact-heading .page-heading{padding:14px 17px;margin-bottom:18px}.cctv-compact-heading .page-heading h1{font-size:24px}}
 .estimate-service-choices .service-card{transition:transform .18s,box-shadow .18s}.estimate-service-choices .service-card:hover{transform:translateY(-3px);box-shadow:0 9px 25px #17435316}.estimate-other{display:flex;flex-wrap:wrap;gap:25px;margin-top:28px}
+
+/* Compact service choices on the services and estimate pages. */
+.services-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.services-grid .service-card{display:grid;grid-template-columns:48px minmax(0,1fr);column-gap:14px;align-content:start;padding:14px 16px;border-top-width:3px;border-radius:10px}
+.services-grid .service-card-heading{grid-column:1;grid-row:1 / 4;display:block}
+.services-grid .service-card-heading .service-card-thumb{width:48px;height:48px;border-radius:8px}
+.services-grid .service-card-heading .number,.services-grid .service-card-heading>svg{display:none}
+.services-grid .service-card h3{grid-column:2;font-size:17px;line-height:1.3;margin:0 0 5px}
+.services-grid .service-card p{grid-column:2;font-size:13px;line-height:1.45;padding:0;margin:0 0 4px}
+.services-grid .service-card>.textlink{grid-column:2;font-size:13px;min-height:44px;gap:8px;justify-self:start}
+@media(max-width:700px){.services-grid{grid-template-columns:1fr}.services-grid .service-card{padding:12px;column-gap:12px}}
