@@ -53,3 +53,5 @@ body{background:#f5f9fc;color:#153044}.header{background:#fff;border-bottom:1px 
 .services-grid .service-card p{grid-column:2;font-size:13px;line-height:1.45;padding:0;margin:0 0 4px}
 .services-grid .service-card>.textlink{grid-column:2;font-size:13px;min-height:44px;gap:8px;justify-self:start}
 @media(max-width:700px){.services-grid{grid-template-columns:1fr}.services-grid .service-card{padding:12px;column-gap:12px}}
+.service-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:620px){.service-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
