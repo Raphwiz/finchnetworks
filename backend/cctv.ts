@@ -1,0 +1,7 @@
+import {type CctvConfig,cctvSummary,validateCctv} from '@/shared/cctv';
+import {type Product} from '@/shared/models';
+import {calculate} from './pricing';
+export function buildCctv(value:unknown,catalog:Product[]){const config=validateCctv(value);const c=config;const items=[{id:`cctv-camera-${c.system}-${c.resolution}-${c.audio?'audio':'silent'}`,quantity:c.cameras},{id:`cctv-${c.system==='ip'?'nvr':'xvr'}-${c.channels}`,quantity:1},{id:`cctv-hdd-${c.storage}`,quantity:1},{id:`cctv-${c.system==='ip'?'cat6':'rg59'}`,quantity:1},...(c.system==='ip'?[{id:'cctv-rj45',quantity:c.cameras*2}]:[{id:'cctv-bnc',quantity:c.cameras*2},{id:'cctv-dc',quantity:c.cameras},{id:'cctv-power',quantity:1}]),{id:'cctv-box',quantity:c.cameras},{id:'cctv-installation',quantity:c.cameras},...(c.monitor?[{id:'cctv-monitor',quantity:1}]:[]),...(c.backup?[{id:'cctv-ups',quantity:1}]:[])];
+const missing=items.filter(i=>!catalog.some(p=>p.id===i.id&&p.published));if(missing.length)throw new Error('Some equipment for this setup is not currently listed. Contact Finch for an alternative.');
+const calculation=calculate(items,catalog);calculation.note='Provisional CCTV estimate, subject to Finch confirmation. Cable length, model compatibility, recorder resolution and audio support, power requirements, travel and applicable taxes will be confirmed after site assessment. Listed installation charges are included in the priced subtotal when set; extra site works are separate.';
+return {config,items,calculation,summary:cctvSummary(config)};}

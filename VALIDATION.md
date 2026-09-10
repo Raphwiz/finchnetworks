@@ -5,3 +5,5 @@
 The optional WebMCP estimate-staging tool is feature-detected. No supported WebMCP validation context was available; registration and execution were not verified. No broader browser interaction or visual QA was requested or performed. Hero imagery is illustrative, not a completed Finch project. The supplied logo was extracted directly from the PDF.
 
 Production requires the administrator to sign in with the configured Finch email. Enquiries are stored in the dashboard; email notifications and online checkout are not configured. Actual product specifications, prices, project photos and service area must be entered by Finch.
+
+2026-09-10: CCTV builder checks passed for IP versus HD equipment, camera/recorder capacities, 2MP/4MP and audio variants, optional extras, invalid selections, editable prices, server-derived enquiry quantities, saved configuration, PDF price snapshots and unpublished equipment. Test prices restored and verification enquiries removed.
