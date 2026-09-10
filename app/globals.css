@@ -55,3 +55,4 @@ body{background:#f5f9fc;color:#153044}.header{background:#fff;border-bottom:1px 
 @media(max-width:700px){.services-grid{grid-template-columns:1fr}.services-grid .service-card{padding:12px;column-gap:12px}}
 .service-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:620px){.service-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.admin-search{display:block;font-size:13px;font-weight:600;margin-bottom:16px;color:#285662}.admin-search input{display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid #b9d5d8;border-radius:8px;background:white}.admin-row>span:last-child{flex-shrink:0;text-align:right}.admin-row>span:last-child small{display:block;color:#08796d;margin-bottom:4px}
