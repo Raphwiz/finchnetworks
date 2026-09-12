@@ -8,6 +8,13 @@
       "when": 1788980135502,
       "tag": "0000_black_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789227655813,
+      "tag": "0001_smiling_the_spike",
+      "breakpoints": true
     }
   ]
 }

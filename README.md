@@ -31,3 +31,22 @@ Estimates are calculated from server-owned current catalogue data. Each submitte
 
 Run npm run build and npx tsc --noEmit. Backend checks must cover tampered prices, invalid quantities, anonymous admin access, persistence, PDF output and image uploads. The optional WebMCP configuration tool stages selections only and does not submit customer data.
 
+
+## Commercial website features
+
+- Shop: device-local draft cart; durable order requests in D1; server-owned prices; featured-only checkout; out-of-stock protection; delivery/collection and installation request.
+- Sales admin: order management, booking confirmation, editable draft quotations, private customer quotation links, acceptance, manually verified deposit/full payment records and installation progress. Quotation status updates also update the source order/enquiry.
+- Packages and maintenance: editable inclusions, starting prices and frequency. Maintenance requests go to bookings. No recurring billing or scheduled visits are implied until Finch agrees a contract.
+- Trust: editable About, collection/delivery, warranty and return information. Only customer-approved reviews are published. Existing project publishing and photos remain available.
+- New routes: /cart, /booking, /packages, /maintenance, /about and /quote?id=PRIVATE_REFERENCE.
+- The cart is a temporary device-local draft, not a customer account. Orders persist when submitted. Quotation links are private bearer links; share only with the intended customer.
+
+### M-Pesa activation still required
+
+Finch currently has no Till/Paybill. Online payments are intentionally unavailable. `backend/mpesa.ts` is a server-side adapter scaffold for Safaricom OAuth, STK initiation and status query, based on the official Safaricom SDK (https://github.com/safaricom/mpesa-php-sdk/blob/master/src/Mpesa.php). It has no public payment routes and is not a production-ready payment integration. Do not activate solely by setting secrets.
+
+Before activation: obtain a supported business account and Daraja access; securely configure the MPESA_* environment values; implement persistent payment attempts with request locking and idempotency, authenticated/provider-queried reconciliation, amount/account/quote validation, callback handling and retry recovery; test sandbox success, failure, timeout, duplicate requests and callbacks; complete a live acceptance test. Only then expose payment buttons. Never mark a quote paid on the basis of STK initiation or an unverified callback. Until then, staff may record independently verified payments, with receipt reference and cumulative amount.
+
+### Local schema
+
+Generated migration `0001_smiling_the_spike.sql` adds the commerce table and indexes. The existing local database originally lacked matching Wrangler migration history for its already-present initial schema; the new migration was applied directly to that verified local database. Production uses the generated migrations from a clean database. Do not reapply the initial schema over an existing database without first reconciling its migration ledger.
