@@ -39,3 +39,10 @@ next-env.d.ts
 
 !.env.example
 *.tsbuildinfo
+
+# VPS persistent state and backups
+/data/
+/backups/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

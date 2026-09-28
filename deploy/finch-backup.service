@@ -1,0 +1,9 @@
+[Unit]
+Description=Finch database and upload backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/finchnetworks
+ExecStart=/usr/bin/docker compose exec -T app node scripts/backup.mjs

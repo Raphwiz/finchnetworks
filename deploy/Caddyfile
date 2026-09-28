@@ -1,0 +1,16 @@
+finchnetworksltd.com {
+    encode zstd gzip
+    request_body {
+        max_size 9MB
+    }
+    reverse_proxy app:3000 {
+        header_up X-Finch-Client-IP {remote_host}
+        header_up -CF-Connecting-IP
+        header_up -Oai-Authenticated-User-Id
+        header_up -Oai-Authenticated-User-Email
+    }
+}
+www.finchnetworksltd.com {
+    redir https://finchnetworksltd.com{uri} permanent
+}
+

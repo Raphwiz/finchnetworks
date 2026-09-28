@@ -1,0 +1,10 @@
+import {cpSync,existsSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+import {pathToFileURL} from 'node:url';
+const root=process.cwd(),standalone=join(root,'.next','standalone');
+if(!existsSync(join(standalone,'server.js')))throw Error('Run npm run build first.');
+process.env.DATA_DIR=resolve(process.env.DATA_DIR||'data');
+process.env.HOSTNAME=process.env.HOSTNAME||'127.0.0.1';
+cpSync(join(root,'public'),join(standalone,'public'),{recursive:true});
+cpSync(join(root,'.next','static'),join(standalone,'.next','static'),{recursive:true});
+await import(pathToFileURL(join(standalone,'server.js')).href);

@@ -1,0 +1,30 @@
+{
+  "products": [
+    {
+      "id": "solar-cctv",
+      "data": "{\"id\":\"solar-cctv\",\"name\":\"Solar CCTV camera\",\"category\":\"CCTV & repairs\",\"description\":\"An option for places without a convenient power connection. Ask us about connectivity, battery capacity and site suitability.\",\"price\":15000,\"image\":\"/api/media/54112705-d038-41b3-b4ce-6c00977dd515.webp\",\"published\":true,\"unit\":\"camera\",\"availability\":\"Enquire for availability\"}"
+    },
+    {
+      "id": "cctv-camera-ip-2-silent",
+      "data": "{\"id\":\"cctv-camera-ip-2-silent\",\"name\":\"2MP IP camera without audio\",\"category\":\"CCTV & repairs\",\"description\":\"NVR-based IP camera option. Video-only option. Exact model to be confirmed.\",\"price\":null,\"image\":\"\",\"published\":true,\"unit\":\"camera\",\"availability\":\"Enquire for availability\"}"
+    },
+    {
+      "id": "cctv-nvr-4",
+      "data": "{\"id\":\"cctv-nvr-4\",\"name\":\"4-channel PoE NVR\",\"category\":\"CCTV & repairs\",\"description\":\"NVR with integrated PoE camera ports. Model, bandwidth, resolution and audio support to be confirmed.\",\"price\":null,\"image\":\"\",\"published\":true,\"unit\":\"recorder\",\"availability\":\"Enquire for availability\"}"
+    },
+    {
+      "id": "cctv-camera-hd-4-silent",
+      "data": "{\"id\":\"cctv-camera-hd-4-silent\",\"name\":\"4MP HD camera without audio\",\"category\":\"CCTV & repairs\",\"description\":\"DVR/XVR-based HD camera option. Video-only option. Exact model to be confirmed.\",\"price\":4500,\"image\":\"\",\"published\":true,\"unit\":\"camera\",\"availability\":\"Available\"}"
+    },
+    {
+      "id": "starlink",
+      "data": "{\"id\":\"starlink\",\"name\":\"Starlink Gen 3\",\"category\":\"Starlink\",\"stockStatus\":\"in-stock\",\"featured\":true,\"description\":\"Discuss the right equipment, mounting and installation for your location. Subscription costs are separate.\",\"price\":58000,\"image\":\"/api/media/bc77c36a-66c1-4a73-8f0d-7ba087c2d46b.webp\",\"published\":true,\"unit\":\"KIT\",\"availability\":\"Enquire for availability\"}"
+    }
+  ],
+  "settings": [
+    {
+      "id": "business",
+      "data": "{\"phone\":\"+254707625129\",\"email\":\"Finchnetworksltd@gmail.com\",\"area\":\"\",\"tiktok\":\"\",\"youtube\":\"\",\"x\":\"\",\"instagram\":\"\"}"
+    }
+  ]
+}

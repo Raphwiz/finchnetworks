@@ -1,0 +1,26 @@
+name: VPS deployment checks
+on:
+  push:
+    branches: [finch-website-rebuild]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:vps
+      - run: npm run build
+      - run: node tests/vps-smoke.mjs
+      - run: npm audit --omit=dev --audit-level=high
+      - run: cp .env.example .env.production && docker compose config --quiet
+      - run: docker build -t finch-vps:test .
+      - run: docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
