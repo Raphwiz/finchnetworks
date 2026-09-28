@@ -8,3 +8,6 @@ export const commerce=sqliteTable('commerce',{customerId:text('customer_id'),id:
 export const customers=sqliteTable('customers',{id:text('id').primaryKey(),email:text('email').notNull(),name:text('name').notNull(),createdAt:integer('created_at').notNull()});
 export const customerSessions=sqliteTable('customer_sessions',{hash:text('hash').primaryKey(),customerId:text('customer_id').notNull(),expiresAt:integer('expires_at').notNull()},t=>[index('idx_customer_sessions_expiry').on(t.expiresAt)]);
 export const oauthFlows=sqliteTable('oauth_flows',{hash:text('hash').primaryKey(),nonce:text('nonce').notNull(),verifier:text('verifier').notNull(),expiresAt:integer('expires_at').notNull()},t=>[index('idx_oauth_flows_expiry').on(t.expiresAt)]);
+export const emailCredentials=sqliteTable('email_credentials',{email:text('email').primaryKey(),customerId:text('customer_id').notNull(),passwordHash:text('password_hash').notNull()});
+export const emailTokens=sqliteTable('email_tokens',{hash:text('hash').primaryKey(),kind:text('kind').notNull(),data:text('data').notNull(),expiresAt:integer('expires_at').notNull()},t=>[index('idx_email_tokens_expiry').on(t.expiresAt)]);
+export const authLimits=sqliteTable('auth_limits',{key:text('key').primaryKey(),count:integer('count').notNull(),expiresAt:integer('expires_at').notNull()});

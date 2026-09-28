@@ -60,3 +60,11 @@ Google activation requires Finch-owned OAuth credentials. In Google Cloud / Goog
 Implementation uses authorization code flow with PKCE, a single-use expiring state bound to an HttpOnly cookie, nonce verification, Google's signed ID token with issuer/audience/expiry validation, Google subject-based identity and seven-day opaque hashed sessions. Logout revokes the current session. Google credentials have not been supplied, so real Google sign-in has not been activated or end-to-end tested.
 
 Checkout policy update: Shop order submission now requires a customer session (HTTP 401 otherwise). Browsing, cart editing, estimate requests and bookings remain open to guests. Google sign-in returns checkout customers to their saved cart. Until Google credentials are configured, checkout is intentionally unavailable. Email/password registration is not implemented.
+
+## Email/password customer accounts
+
+The account page now defaults to email/password sign-in, Create account and Forgot password. Google is optional. Registration verifies email before creating a usable account. Passwords use salted scrypt (N=16384, r=8, p=5); reset/verification tokens are stored only as hashes, expire, and are single use. Password reset revokes existing customer sessions. IP and email attempt limits apply. Email/password and Google identities remain separate; no unsafe automatic email matching is performed.
+
+Configure RESEND_API_KEY, AUTH_EMAIL_FROM (a verified sender on your own domain) and PUBLIC_SITE_URL (the trusted public HTTPS website origin). Registration and reset email requests fail closed when these are absent. No real email has been sent or delivery-tested. Existing verified email/password users can still sign in when email delivery is unavailable. The public site must be reachable for customers to use emailed links. Do not put API keys in source control or chat.
+
+Supersedes the earlier note that email/password registration was not implemented. Checkout still requires sign-in; guest estimates and appointments remain available.
