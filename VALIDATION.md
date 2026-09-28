@@ -15,3 +15,5 @@ Passed API checks for server-owned order pricing, featured-shop restriction, una
 No browser UI automation was requested or performed. M-Pesa remains deliberately unavailable because the business account does not exist yet; no payment provider calls or live payment tests were performed.
 
 Final verification: TypeScript passed after appointment-time changes; all eight commercial/admin page routes returned HTTP 200; generated migrations applied successfully to an empty SQLite database. The commercial API test suite passed after validation hardening. The final production build passed.
+
+Customer account checks: TypeScript and production build passed. Clean migrations passed. Seeded disposable local sessions verified customer isolation, server-owned record ownership (ignoring supplied customer IDs), anonymous account denial, staff/customer separation, cross-origin logout rejection and logout session revocation. Test records were removed. Real Google OAuth round-trip remains untested until Finch supplies its own credentials.

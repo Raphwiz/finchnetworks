@@ -50,3 +50,11 @@ Before activation: obtain a supported business account and Daraja access; secure
 ### Local schema
 
 Generated migration `0001_smiling_the_spike.sql` adds the commerce table and indexes. The existing local database originally lacked matching Wrangler migration history for its already-present initial schema; the new migration was applied directly to that verified local database. Production uses the generated migrations from a clean database. Do not reapply the initial schema over an existing database without first reconciling its migration ledger.
+
+## Optional customer Google accounts
+
+Customers can use /account to sign in, view their own new orders, appointment requests, enquiries and linked non-draft quotations, and sign out. Guest flows remain enabled. Existing guest records are not automatically claimed by matching a phone number or email. Customer sessions do not confer staff permissions.
+
+Google activation requires Finch-owned OAuth credentials. In Google Cloud / Google Auth Platform, configure the consent screen and create a Web application OAuth client. Register the exact redirect URI `http://localhost:3000/api/customer/callback` for local testing and `https://YOUR-DOMAIN/api/customer/callback` for production. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URI securely in the environment, then restart. Do not commit the secret. Add test users if the Google app is in testing mode and complete Google's applicable publishing requirements. Configure only openid, email and profile scopes. Reference: https://developers.google.com/identity/openid-connect/openid-connect
+
+Implementation uses authorization code flow with PKCE, a single-use expiring state bound to an HttpOnly cookie, nonce verification, Google's signed ID token with issuer/audience/expiry validation, Google subject-based identity and seven-day opaque hashed sessions. Logout revokes the current session. Google credentials have not been supplied, so real Google sign-in has not been activated or end-to-end tested.
