@@ -23,4 +23,20 @@ jobs:
       - run: npm audit --omit=dev --audit-level=high
       - run: cp .env.example .env.production && docker compose config --quiet
       - run: docker build -t finch-vps:test .
+      - name: Check container startup and restart
+        run: |
+          docker run -d --name finch-test --env-file .env.production -p 127.0.0.1:3102:3000 finch-vps:test
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3102/api/health; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3102/api/health
+          curl -fsS http://127.0.0.1:3102/api/media/54112705-d038-41b3-b4ce-6c00977dd515.webp -o /tmp/solar.webp
+          docker restart finch-test
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3102/api/health; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3102/api/health
+          docker rm -f finch-test
       - run: docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
