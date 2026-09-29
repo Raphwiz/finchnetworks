@@ -31,9 +31,9 @@ The previous Cloudflare Workers/D1/R2 runtime and platform-specific administrato
 
 ## Accounts and integrations
 
-Shop checkout requires a customer account. Estimates and appointments remain open to guests. Email/password signup requires email verification; passwords use salted scrypt. Reset tokens expire, are single-use and revoke sessions on password change. Email/password and Google identities remain separate. Request ownership is set from the server session; old guest records are not attached by matching email or phone.
+Shop checkout requires a customer account. Estimates and appointments remain open to guests. Email/password signup creates the account immediately and signs the customer in. Passwords use salted scrypt. Reset tokens expire, are single-use and revoke sessions on password change. Email/password and Google identities remain separate. Request ownership is set from the server session; old guest records are not attached by matching email or phone.
 
-Configure a verified Resend sender and the environment values in `.env.example` for verification/reset emails. Google sign-in is optional. Neither real email delivery nor Google sign-in can be launch-tested until Finch configures those services. The owner can provision the first administrator locally without email delivery.
+Configure a verified Resend sender and the environment values in `.env.example` to enable password-reset emails. Google sign-in is optional. Neither real email delivery nor Google sign-in can be launch-tested until Finch configures those services. Customers can still create accounts and sign in before that. The owner can provision the first administrator locally without email delivery.
 
 WhatsApp notifications are owner-reviewed messages opened in WhatsApp; they are not automatically sent. M-Pesa is an inactive adapter scaffold: it still needs the business account, durable payment attempts, verified reconciliation, callbacks and sandbox/live acceptance tests. Setting keys does not enable payments.
 
