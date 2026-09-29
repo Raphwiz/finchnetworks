@@ -80,3 +80,9 @@ body{background:#f5f9fc;color:#153044}.header{background:#fff;border-bottom:1px 
 .account-signin .notice{padding:12px;font-size:14px}
 .account-signin>.actions{gap:14px;margin-top:20px}
 @media(max-width:480px){.panel.account-signin{padding:20px}}
+.order-steps{list-style:none;display:grid;gap:12px;margin:20px 0;padding:0}
+.order-steps li{padding:14px 16px;border:1px solid #b9d5da;border-radius:10px;background:#fff}
+.order-steps li.done{border-color:#9bd5c6;background:#e7f6f1}
+.order-steps li.current{border-color:#e5bb18;background:#fffdf0}
+.order-steps strong,.order-steps span{display:block}
+.order-steps span{color:#345d65;margin-top:4px}
