@@ -18,7 +18,7 @@ test('shop order update links the signed-in account',()=>{
 test('accepted quotation links the quotation page',()=>{
   const text=customerUpdateText({kind:'quote',id,status:'accepted',reference:'QUO-ABCDEF12',name:'Jane Wanjiku'},origin);
   assert.match(text,/Your Finch quotation QUO-ABCDEF12 is now accepted\./);
-  assert.match(text,/The deposit is now due\. The quotation page shows how to pay Finch Networks Ltd\. This message does not charge your phone\./);
+  assert.match(text,/Pay the deposit on the quotation page with the M-Pesa prompt\. Your phone is charged only after you enter your PIN\./);
   assert.match(text,/\/quote\?id=12345678-1234-1234-1234-123456789abc/);
 });
 

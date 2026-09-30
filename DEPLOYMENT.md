@@ -44,7 +44,7 @@ Check `https://finchnetworksltd.com/api/health`, then test Shop, estimates, a bo
 
 Verify a sending domain in Resend, add its required DNS records in Cloudflare, and set `RESEND_API_KEY` and `AUTH_EMAIL_FROM` to your verified sender. Do not invent a working mailbox: set up business email separately if you want to receive mail at that address. Then run `docker compose up -d --force-recreate app` and test password reset with a real mailbox. Customers can sign in before Resend is configured. Creating an email account needs the 6-digit code sent to that address, so new email registration stays unavailable until sending is configured. Until it is configured, password-reset emails stay disabled, and new estimates, orders and site visits are not emailed to the business address saved in Settings. Once it is configured, each of those requests emails that inbox with the reference and a link. Signed-in customers are also emailed when the status of their shop order, estimate, quotation or site visit changes. The server-created administrator can sign in either way.
 
-Google is optional: set its three environment values and register the exact callback `https://finchnetworksltd.com/api/customer/callback`. M-Pesa is not active; adding environment keys alone does not activate payment support.
+Google is optional: set its three environment values and register the exact callback `https://finchnetworksltd.com/api/customer/callback`. M-Pesa STK uses the business Paybill or Till and the callback `https://finchnetworksltd.com/api/commerce/mpesa/callback`. Adding the keys does not activate it. Set `MPESA_STK_ENABLED=true` only after a live prompt is verified. Until then the quotation tells the customer their phone will not be charged.
 
 ## 5. Backups and recovery
 

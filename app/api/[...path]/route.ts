@@ -12,7 +12,8 @@ async function dispatch(req:Request){
  if(original.pathname==='/api/health'){
   try{await database().prepare('SELECT count(*) FROM admin_users').first();return Response.json({ok:true},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({ok:false},{status:503});}
  }
- if(req.method==='POST'&&req.headers.get('origin')!==url.origin)return Response.json({error:'Request origin not allowed.'},{status:403});
+ const safaricomCallback=original.pathname==='/api/commerce/mpesa/callback';
+ if(req.method==='POST'&&!safaricomCallback&&req.headers.get('origin')!==url.origin)return Response.json({error:'Request origin not allowed.'},{status:403});
  return handle(normalized);
 }
 export const GET=dispatch;

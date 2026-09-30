@@ -15,6 +15,12 @@ test('staff alert includes the reference, contact details and links',()=>{
   assert.equal(text.includes('/api/estimate/'),false);
 });
 
+test('payment alert opens the quotation',()=>{
+  const text=staffAlertText({...alert,kind:'payment',reference:'QUO-ABCDEF12',detail:'M-Pesa NLJ7RT61SV for KES 15000'},'https://finchnetworksltd.com');
+  assert.match(text,/New payment QUO-ABCDEF12/);
+  assert.match(text,/Open: https:\/\/finchnetworksltd.com\/quote\?id=12345678-1234-1234-1234-123456789abc/);
+});
+
 test('staff alert omits an empty summary line',()=>{
   const text=staffAlertText({...alert,kind:'visit',reference:'BOOK-ABCDEF12',detail:'   '},'https://finchnetworksltd.com');
   assert.match(text,/New site visit BOOK-ABCDEF12/);
