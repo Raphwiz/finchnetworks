@@ -1,10 +1,11 @@
 'use client';
 import EmailLogin from './EmailLogin';
+import {usePathname} from 'next/navigation';
 import {useEffect,useState} from 'react';
 import {api} from './api';
 import {Shell,PageHeading} from './Shell';
 import {money} from '@/shared/models';
-export function AccountLink(){const [user,setUser]=useState<any>(null);useEffect(()=>{api('customer/session').then(d=>setUser(d.customer)).catch(()=>{});},[]);return <a href="/account">{user?'My Account':'Sign in'}</a>}
+export function AccountLink(){const path=usePathname()||'';const [user,setUser]=useState<any>(null);useEffect(()=>{api('customer/session').then(d=>setUser(d.customer)).catch(()=>{});},[]);return <a href="/account" aria-current={path==='/account'||path.startsWith('/account/')?'page':undefined}>{user?'My Account':'Sign in'}</a>}
 export function AccountPrompt(){const [state,setState]=useState<any>(null);useEffect(()=>{api('customer/session').then(setState).catch(()=>{});},[]);return <p className="helper">{state?.customer?<>Signed in as {state.customer.name}. This request will appear in <a href="/account">My Account</a>.</>:<>You can continue as a guest. <a href="/account" target="_blank" rel="noreferrer">Sign in</a> before submitting to keep this request in your account. Refresh this page after signing in.</>}</p>}
 const kindLabel:Record<string,string>={enquiry:'Estimate',quote:'Quotation',order:'Order',booking:'Visit'};
 function when(value:number){const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
