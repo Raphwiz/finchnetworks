@@ -1,4 +1,5 @@
 import Admin from '@/frontend/Admin';
+export const metadata={title:'Administrator sign-in',robots:{index:false,follow:false}};
 import {Shell,PageHeading} from '@/frontend/Shell';
 import {isAdmin} from '@/backend/auth';
 export const dynamic='force-dynamic';
