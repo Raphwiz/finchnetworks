@@ -21,7 +21,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Local data is stored in ignored `data/`. Set `PUBLIC_SITE_URL=http://localhost:3000` for local authentication if configuring an environment file. Do not use the live domain origin while testing localhost. Create a local administrator with `npm run admin:create -- owner@example.com`; the password is entered privately in the terminal. Sign in through `/account?next=admin`. Public accounts never acquire admin privileges automatically.
+Local data is stored in ignored `data/`. Set `PUBLIC_SITE_URL=http://localhost:3000` for local authentication if configuring an environment file. Do not use the live domain origin while testing localhost. Create a local administrator with `npm run admin:create -- owner@example.com`; the password is entered privately in the terminal. Sign in through `/admin`. The administrator account cannot sign in on My Account. Public accounts never acquire admin privileges automatically.
 
 ## Deploy to Contabo
 

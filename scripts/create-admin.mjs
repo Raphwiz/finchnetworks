@@ -15,6 +15,6 @@ try{
  const salt=randomUUID().replaceAll('-','');const hash='scrypt$16384$8$5$'+salt+'$'+scryptSync(password,salt,64,{N:16384,r:8,p:5,maxmem:64*1024*1024}).toString('hex');
  const id='email:'+randomUUID();db.exec('PRAGMA foreign_keys=ON; BEGIN IMMEDIATE');
  try{db.prepare('INSERT INTO customers(id,email,name,created_at) VALUES (?,?,?,?)').run(id,email,'Finch Administrator',Date.now());db.prepare('INSERT INTO email_credentials(email,customer_id,password_hash) VALUES (?,?,?)').run(email,id,hash);db.prepare('INSERT INTO admin_users(customer_id) VALUES (?)').run(id);db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}
- console.log('Administrator created. Sign in at /account?next=admin.');
+ console.log('Administrator created. Sign in at /admin.');
 }finally{db.close();}
 

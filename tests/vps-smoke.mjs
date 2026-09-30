@@ -24,13 +24,17 @@ let server;let logs='';
 async function start(){server=spawn(process.execPath,['scripts/start.mjs'],{env,stdio:['ignore','pipe','pipe']});server.stdout.on('data',b=>logs+=b);server.stderr.on('data',b=>logs+=b);for(let i=0;i<100;i++){if(server.exitCode!==null)throw Error(logs);try{if((await fetch(base+'/api/health')).ok)return;}catch{}await delay(300);}throw Error('Server did not start: '+logs);}
 async function stop(){if(server&&server.exitCode===null){const ended=new Promise(r=>server.once('exit',r));server.kill();await ended;}}
 async function call(path,body,cookie='',extra={}){const r=await fetch(base+'/api/'+path,{method:body===undefined?'GET':'POST',headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie,...extra},body:body===undefined?undefined:JSON.stringify(body)});const data=await r.json();return {r,data};}
-async function login(email){const {r}=await call('customer/login',{email:email+'@example.invalid',password});assert.equal(r.status,200);assert.match(r.headers.get('set-cookie'),/HttpOnly/);assert.match(r.headers.get('set-cookie'),/Secure/);return r.headers.get('set-cookie').split(';')[0];}
+async function login(email){const {r}=await call('customer/login',{email:email+'@example.invalid',password,admin:email==='owner'});assert.equal(r.status,200);assert.match(r.headers.get('set-cookie'),/HttpOnly/);assert.match(r.headers.get('set-cookie'),/Secure/);return r.headers.get('set-cookie').split(';')[0];}
 try{
  await start();
  for(const path of ['/','/services','/products','/account','/solar-cctv.webp'])assert.equal((await fetch(base+path)).status,200,path);
  assert.equal((await call('admin',undefined,'',{'oai-authenticated-user-email':'owner@example.invalid','oai-authenticated-user-id':'owner'})).r.status,403);
  assert.equal((await call('commerce/order',{})).r.status,401);
+ assert.equal((await call('customer/login',{email:'owner@example.invalid',password})).r.status,403);
+ assert.equal((await call('customer/login',{email:'customer@example.invalid',password,admin:true})).r.status,403);
  const owner=await login('owner'),customer=await login('customer'),other=await login('other');
+ assert.equal((await call('customer/session',undefined,owner)).data.admin,true);
+ assert.equal((await call('customer/session',undefined,customer)).data.admin,false);
  assert.equal((await call('admin',undefined,customer)).r.status,403);
  assert.equal((await call('admin',undefined,owner)).r.status,200);
  assert.equal((await call('admin/settings',{},owner,{Origin:'https://evil.example'})).r.status,403);

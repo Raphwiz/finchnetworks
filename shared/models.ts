@@ -1,5 +1,6 @@
 export type Product={featured?:boolean;stockStatus?:'in-stock'|'out-of-stock'|'on-request';id:string;name:string;category:string;description:string;price:number|null;image:string;published:boolean;unit:string;availability:string};
-export type Project={id:string;title:string;category:string;location:string;description:string;image:string;published:boolean};
+export type Project={id:string;title:string;category:string;location:string;description:string;image:string;images?:string[];published:boolean};
+export function projectPhotos(project:{image?:string;images?:string[]}){const images=Array.isArray(project.images)?project.images.filter(src=>typeof src==='string'&&src.length>0):[];return images.length?images:project.image?[project.image]:[];}
 export type Settings={phone:string;email:string;area:string;tiktok:string;youtube:string;x:string;instagram:string};
 export const socialFields=[{key:'tiktok',label:'TikTok'},{key:'youtube',label:'YouTube'},{key:'x',label:'X'},{key:'instagram',label:'Instagram'}] as const;
 export const defaultSettings:Settings={phone:'+254707625129',email:'finchnetworkslimited@gmail.com',area:'',tiktok:'',youtube:'',x:'',instagram:''};
