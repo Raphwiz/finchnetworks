@@ -34,7 +34,7 @@ docker compose logs --tail=100 app caddy
 docker compose exec app node scripts/create-admin.mjs Finchnetworksltd@gmail.com
 ```
 
-The administrator command asks for a password twice without displaying it. It creates the owner directly, so email delivery is not needed for this first server-managed account. Never put the password in shell arguments, GitHub or chat. It refuses to overwrite an existing account. Sign in at `https://finchnetworksltd.com/account?next=admin`. Use My Account to sign out. Public registration never grants administrator access, even if an email matches the owner's address.
+The administrator command asks for a password twice without displaying it. It creates the owner directly, so email delivery is not needed for this first server-managed account. Never put the password in shell arguments, GitHub or chat. It refuses to overwrite an existing account. Sign in at `https://finchnetworksltd.com/admin`, and sign out from that page. The administrator account cannot sign in on My Account. Public registration never grants administrator access, even if an email matches the owner's address.
 
 If an email account already exists, verify that it belongs to the intended administrator, then grant its exact `customer_id` in the `admin_users` table through a controlled database maintenance session. Do not automatically grant by an unverified email or HTTP header.
 
@@ -42,9 +42,9 @@ Check `https://finchnetworksltd.com/api/health`, then test Shop, estimates, a bo
 
 ## 4. Activate customer emails
 
-Verify a sending domain in Resend, add its required DNS records in Cloudflare, and set `RESEND_API_KEY` and `AUTH_EMAIL_FROM` to your verified sender. Do not invent a working mailbox: set up business email separately if you want to receive mail at that address. Then run `docker compose up -d --force-recreate app` and test registration, verification and password reset with a real mailbox. Until configured, public registration/reset remain disabled; the server-created administrator can sign in.
+Verify a sending domain in Resend, add its required DNS records in Cloudflare, and set `RESEND_API_KEY` and `AUTH_EMAIL_FROM` to your verified sender. Do not invent a working mailbox: set up business email separately if you want to receive mail at that address. Then run `docker compose up -d --force-recreate app` and test password reset with a real mailbox. Customers can sign in before Resend is configured. Creating an email account needs the 6-digit code sent to that address, so new email registration stays unavailable until sending is configured. Until it is configured, password-reset emails stay disabled, and new estimates, orders and site visits are not emailed to the business address saved in Settings. Once it is configured, each of those requests emails that inbox with the reference and a link. Signed-in customers are also emailed when the status of their shop order, estimate, quotation or site visit changes. The server-created administrator can sign in either way.
 
-Google is optional: set its three environment values and register the exact callback `https://finchnetworksltd.com/api/customer/callback`. M-Pesa is not active; adding environment keys alone does not activate payment support.
+Google is optional: set its three environment values and register the exact callback `https://finchnetworksltd.com/api/customer/callback`. M-Pesa STK uses the business Paybill or Till and the callback `https://finchnetworksltd.com/api/commerce/mpesa/callback`. Adding the keys does not activate it. Set `MPESA_STK_ENABLED=true` only after a live prompt is verified. Until then the quotation tells the customer their phone will not be charged.
 
 ## 5. Backups and recovery
 

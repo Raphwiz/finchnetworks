@@ -14,7 +14,7 @@ export default function AdminWorkspace({active,onNavigate,onSignOut,busy,data,ch
  useEffect(()=>{function key(e:KeyboardEvent){if(e.key==='Escape')setOpen(false);}window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[]);
  const current=groups.flatMap(g=>g.items).find(i=>i.id===active)!;
  const newEnquiries=data?.enquiries.filter((e:any)=>e.status==='new').length;
- function navigate(value:string){onNavigate(value);setOpen(false);}
+ function navigate(value:string){onNavigate(value);setOpen(false);window.scrollTo({top:0,behavior:'instant'});}
  const stats=[{label:'New enquiries',value:newEnquiries,target:'enquiries',icon:Inbox,note:'Ready for your response'},{label:'Active orders',value:sales?.records.filter((r:any)=>r.kind==='order'&&!['completed','cancelled'].includes(r.status)).length,target:'orders',icon:ShoppingBag,note:'Orders in progress'},{label:'Visit requests',value:sales?.records.filter((r:any)=>r.kind==='booking'&&r.status==='requested').length,target:'bookings',icon:CalendarDays,note:'Awaiting confirmation'},{label:'Published products',value:data?.products.filter((p:any)=>p.featured&&p.published).length,target:'shop',icon:Package,note:'Visible in your shop'}];
  return <div className="admin-workspace">
  <a className="admin-skip" href="#admin-content">Skip to workspace</a>
