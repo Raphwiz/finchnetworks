@@ -1,0 +1,1 @@
+export const repairEquipment=['CCTV cameras / recorder','Solar CCTV','Electric fence','Automatic gate','Office network / Wi-Fi','Starlink','Intercom / access control','Fingerprint attendance','Other'] as const;

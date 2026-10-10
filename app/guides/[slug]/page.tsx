@@ -1,0 +1,7 @@
+import {notFound} from 'next/navigation';
+import {Shell,PageHeading} from '@/frontend/Shell';
+import {guides} from '@/shared/guides';
+import {pageMeta} from '@/shared/seo';
+export function generateStaticParams(){return Object.keys(guides).map(slug=>({slug}));}
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const guide=guides[slug as keyof typeof guides];return guide?pageMeta(guide.title,guide.intro,`/guides/${slug}`):{};}
+export default async function Page({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const guide=guides[slug as keyof typeof guides];if(!guide)notFound();return <Shell><a href="/guides" className="textlink">← All buying guides</a><PageHeading label="FINCH BUYING GUIDE" title={guide.title} description={guide.intro}/><article className="buying-guide">{guide.sections.map(section=><section key={section.title}><h2>{section.title}</h2><p>{section.text}</p></section>)}<section><h2>Before you request a quotation</h2><ul>{guide.questions.map(q=><li key={q}>{q}</li>)}</ul></section><p className="guide-source">Further reading: <a href={guide.source} target="_blank" rel="noreferrer">{guide.sourceLabel}</a>.</p><div className="guide-next"><h2>Let's work out what fits your space.</h2><p>Share your requirements and Finch will help you confirm the equipment and installation scope.</p><a href={guide.href} className="button yellow">{guide.action}</a></div></article></Shell>}

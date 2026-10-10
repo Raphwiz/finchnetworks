@@ -27,7 +27,7 @@ async function call(path,body,cookie='',extra={}){const r=await fetch(base+'/api
 async function login(email){const {r}=await call('customer/login',{email:email+'@example.invalid',password,admin:email==='owner'});assert.equal(r.status,200);assert.match(r.headers.get('set-cookie'),/HttpOnly/);assert.match(r.headers.get('set-cookie'),/Secure/);return r.headers.get('set-cookie').split(';')[0];}
 try{
  await start();
- for(const path of ['/','/services','/products','/account','/solar-cctv.webp'])assert.equal((await fetch(base+path)).status,200,path);
+ for(const path of ['/','/services','/products','/account','/solar-cctv.webp','/repairs','/guides','/guides/ip-or-hd-cctv','/guides/choosing-solar-cctv','/guides/planning-starlink'])assert.equal((await fetch(base+path)).status,200,path);
  assert.equal((await call('admin',undefined,'',{'oai-authenticated-user-email':'owner@example.invalid','oai-authenticated-user-id':'owner'})).r.status,403);
  assert.equal((await call('commerce/order',{})).r.status,401);
  assert.equal((await call('customer/login',{email:'owner@example.invalid',password})).r.status,403);
@@ -41,6 +41,25 @@ try{
  const form=new FormData();form.append('file',new Blob([readFileSync('public/solar-cctv.webp')],{type:'image/webp'}),'solar.webp');
  const uploaded=await fetch(base+'/api/admin/upload',{method:'POST',headers:{Origin:origin,Cookie:owner},body:form});assert.equal(uploaded.status,200);const image=(await uploaded.json()).url;
  assert.equal((await fetch(base+image)).status,200);
+ const repairForm=(photo,consent=true)=>{const f=new FormData();for(const [key,value] of Object.entries({name:'Repair test',phone:'+254700000000',location:'Test area',equipment:'CCTV cameras / recorder',fault:'Recorder is not displaying video.',website:''}))f.set(key,value);if(consent)f.set('consent','on');if(photo)f.set('photo',photo,'test.webp');return f;};
+ const sendRepair=(form,originHeader=origin)=>fetch(base+'/api/repairs',{method:'POST',headers:{Origin:originHeader},body:form});
+ assert.equal((await sendRepair(repairForm(), 'https://evil.example')).status,403);
+ assert.equal((await sendRepair(repairForm(null,false))).status,400);
+ assert.equal((await sendRepair(repairForm(new Blob(['not an image'],{type:'image/webp'})))).status,400);
+ assert.equal((await sendRepair(repairForm(new Blob([new Uint8Array(4_000_001)],{type:'image/webp'})))).status,400);
+ const noPhoto=await sendRepair(repairForm());assert.equal(noPhoto.status,201);
+ const repairResponse=await sendRepair(repairForm(new Blob([readFileSync('public/solar-cctv.webp')],{type:'image/webp'})));assert.equal(repairResponse.status,201);const repairResult=await repairResponse.json();assert.match(repairResult.reference,/^FN-/);
+ const repairRecord=(await call('admin',undefined,owner)).data.enquiries.find(e=>e.id===repairResult.id);assert.equal(repairRecord.requestType,'repair');assert.match(repairRecord.notes,/Recorder is not displaying video/);
+ assert.equal((await call('commerce/tracking/'+repairResult.id)).data.status,'new');
+ assert.equal((await call('admin/status',{id:repairResult.id,status:'contacted'},owner)).r.status,200);
+ assert.equal((await call('commerce/tracking/'+repairResult.id)).data.status,'contacted');
+ const privatePhoto=repairRecord.repairPhoto;assert.ok(privatePhoto);
+ assert.equal((await fetch(base+privatePhoto)).status,403);
+ assert.equal((await fetch(base+privatePhoto,{headers:{Cookie:customer}})).status,403);
+ const privateImage=await fetch(base+privatePhoto,{headers:{Cookie:owner}});assert.equal(privateImage.status,200);assert.match(privateImage.headers.get('cache-control'),/no-store/);
+ assert.equal((await fetch(base+privatePhoto.replace('/admin/repair-photo/','/media/'))).status,404);
+ for(let i=0;i<3;i++)assert.equal((await sendRepair(repairForm())).status,201);
+ assert.equal((await sendRepair(repairForm())).status,429);
  const id=randomUUID();const order={id,name:'Smoke test',phone:'+254700000000',location:'Test',consent:true,fulfilment:'collection',customerId:'other',items:[{id:'solar-cctv',quantity:1,price:1}]};
  assert.equal((await call('commerce/order',order,customer)).r.status,201);
  assert.equal(db.prepare('SELECT customer_id FROM commerce WHERE id=?').get(id).customer_id,'customer');
@@ -52,6 +71,7 @@ try{
  assert.equal((await call('customer/reset',{token,password})).r.status,400);
  assert.equal((await call('customer/login',{email:'customer@example.invalid',password})).r.status,401);
  await stop();await start();
+ assert.equal((await fetch(base+privatePhoto,{headers:{Cookie:owner}})).status,200);
  assert.equal((await fetch(base+image)).status,200);
  assert.equal((await call('admin',undefined,owner)).r.status,200);
  assert.equal(db.prepare('SELECT count(*) AS n FROM commerce WHERE id=?').get(id).n,1);

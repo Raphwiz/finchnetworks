@@ -20,8 +20,8 @@ class Statement {
 }
 const adapter={prepare:(sql:string)=>new Statement(sql),async batch(statements:Statement[]){const db=connectionFor();db.exec('BEGIN IMMEDIATE');try{const results=statements.map(s=>s.execute());db.exec('COMMIT');return results;}catch(e){db.exec('ROLLBACK');throw e;}}};
 export function database(){return adapter;}
-function mediaFile(key:string){if(!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))throw Error('Invalid media key');return join(dataDirectory(),'uploads',key);}
-export function media(){return {
- async get(key:string){try{return {body:new Uint8Array(readFileSync(mediaFile(key))),httpMetadata:{contentType:key.endsWith('.jpg')?'image/jpeg':key.endsWith('.png')?'image/png':'image/webp'}};}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return null;throw e;}},
- async put(key:string,buffer:ArrayBuffer,_options?:unknown){const file=mediaFile(key);mkdirSync(join(dataDirectory(),'uploads'),{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';writeFileSync(temp,new Uint8Array(buffer),{mode:0o600});renameSync(temp,file);}
+function mediaFile(key:string,privateUpload=false){if(!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))throw Error('Invalid media key');return join(dataDirectory(),'uploads',...(privateUpload?['private']:[]),key);}
+export function media(privateUpload=false){return {
+ async get(key:string){try{return {body:new Uint8Array(readFileSync(mediaFile(key,privateUpload))),httpMetadata:{contentType:key.endsWith('.jpg')?'image/jpeg':key.endsWith('.png')?'image/png':'image/webp'}};}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return null;throw e;}},
+ async put(key:string,buffer:ArrayBuffer,_options?:unknown){const file=mediaFile(key,privateUpload);mkdirSync(join(dataDirectory(),'uploads',...(privateUpload?['private']:[])),{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';writeFileSync(temp,new Uint8Array(buffer),{mode:0o600});renameSync(temp,file);}
 };}
