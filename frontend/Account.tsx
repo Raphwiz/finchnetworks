@@ -6,7 +6,14 @@ import {useEffect,useState} from 'react';
 import {api} from './api';
 import {Shell,PageHeading} from './Shell';
 import {money} from '@/shared/models';
-export function AccountLink(){const path=usePathname()||'';const [user,setUser]=useState<any>(null),[admin,setAdmin]=useState(false);useEffect(()=>{api('customer/session').then(d=>{setUser(d.customer);setAdmin(d.admin===true);}).catch(()=>{});},[]);const href=admin?'/admin':'/account';return <a href={href} aria-current={(admin?path==='/admin':path==='/account'||path.startsWith('/account/'))?'page':undefined}>{admin?'Admin':user?'My Account':'Sign in'}</a>}
+export function AccountLink(){
+ const path=usePathname()||'';
+ const [user,setUser]=useState<any>(null),[admin,setAdmin]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ useEffect(()=>{api('customer/session').then(d=>{setUser(d.customer);setAdmin(d.admin===true);}).catch(()=>{});},[]);
+ async function signOut(){setBusy(true);setError('');try{await api('customer/logout',{});location.assign('/');}catch(e){setError(e instanceof Error?e.message:'Could not sign out. Please try again.');setBusy(false);}}
+ const href=admin?'/admin':'/account';
+ return <div className="nav-account"><a href={href} aria-current={(admin?path==='/admin':path==='/account'||path.startsWith('/account/'))?'page':undefined}>{admin?'Admin':user?'My Account':'Sign in'}</a>{(user||admin)&&<button type="button" className="nav-signout" onClick={signOut} disabled={busy}>{busy?'Signing out…':'Sign out'}</button>}{error&&<p className="nav-account-error" role="alert">{error}</p>}</div>;
+}
 export function AccountPrompt(){const [state,setState]=useState<any>(null);useEffect(()=>{api('customer/session').then(setState).catch(()=>{});},[]);return <p className="helper">{state?.admin?<>You are signed in as the Finch administrator. Use a customer account to keep a request in My Account.</>:state?.customer?<>Signed in as {state.customer.name}. This request will appear in <a href="/account">My Account</a>.</>:<>You can continue as a guest. <a href="/account" target="_blank" rel="noreferrer">Sign in</a> before submitting to keep this request in your account. Refresh this page after signing in.</>}</p>}
 const kindLabel:Record<string,string>={enquiry:'Estimate',quote:'Quotation',order:'Order',booking:'Visit'};
 function when(value:number){const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});}
