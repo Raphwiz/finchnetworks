@@ -3,7 +3,7 @@ export type StaffAlert={kind:'estimate'|'enquiry'|'order'|'visit'|'payment';refe
 const staffLabels={estimate:'estimate',enquiry:'enquiry',order:'shop order',visit:'site visit',payment:'payment'} as const;
 export function staffAlertLabel(kind:StaffAlert['kind']){return staffLabels[kind];}
 export function staffAlertText(alert:StaffAlert,origin:string){const detail=(alert.detail||'').trim();const open=alert.kind==='payment'?`${origin}/quote?id=${encodeURIComponent(alert.id)}`:`${origin}${trackingPath(alert.id)}`;return [`New ${staffLabels[alert.kind]} ${alert.reference}`,`${alert.name} · ${alert.phone}`,alert.location,detail,`Open: ${open}`,`Admin: ${origin}/admin`].filter(line=>line!=='').join('\n');}
-export type CustomerUpdate={kind:'order'|'quote'|'booking'|'enquiry';id:string;status:string;reference?:string;name?:string;customerMessage?:string;date?:string;time?:string;confirmedDate?:string;confirmedTime?:string};
+export type CustomerUpdate={updateId?:string;kind:'order'|'quote'|'booking'|'enquiry';id:string;status:string;reference?:string;name?:string;customerMessage?:string;date?:string;time?:string;confirmedDate?:string;confirmedTime?:string};
 const customerLabels={order:'shop order',quote:'quotation',booking:'site visit',enquiry:'estimate'} as const;
 export function customerUpdateLabel(kind:CustomerUpdate['kind']){return customerLabels[kind];}
 export function customerUpdateReference(update:CustomerUpdate){if(update.reference)return update.reference;const prefix=update.kind==='booking'?'BOOK':update.kind==='quote'?'QUO':'FN';return `${prefix}-${update.id.slice(0,8).toUpperCase()}`;}

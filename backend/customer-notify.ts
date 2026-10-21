@@ -14,7 +14,7 @@ export async function notifyCustomer(update:CustomerUpdate){
     if(!to)return;
     const origin=new URL(config('PUBLIC_SITE_URL')).origin;
     const reference=customerUpdateReference(update);
-    const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${config('RESEND_API_KEY')}`,'Content-Type':'application/json','Idempotency-Key':`customer-${update.kind}-${update.id}-${update.status}`},body:JSON.stringify({from:config('AUTH_EMAIL_FROM'),to:[to],subject:`Your Finch ${customerUpdateLabel(update.kind)} ${reference} is ${String(update.status).replaceAll('-',' ')}`,text:customerUpdateText(update,origin)}),signal:AbortSignal.timeout(15000)});
+    const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${config('RESEND_API_KEY')}`,'Content-Type':'application/json','Idempotency-Key':`customer-${update.kind}-${update.id}-${update.updateId||update.status}`},body:JSON.stringify({from:config('AUTH_EMAIL_FROM'),to:[to],subject:`Your Finch ${customerUpdateLabel(update.kind)} ${reference} is ${String(update.status).replaceAll('-',' ')}`,text:customerUpdateText(update,origin)}),signal:AbortSignal.timeout(15000)});
     if(!response.ok)console.error('Finch customer update failed',response.status);
     else console.info(`Finch customer update sent ${update.kind} ${reference}`);
   }catch(e){console.error('Finch customer update failed',e instanceof Error?e.message:'Unknown error');}
