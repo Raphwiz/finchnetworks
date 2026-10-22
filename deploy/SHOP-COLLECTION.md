@@ -32,3 +32,21 @@ Prompt for wifi-kit.webp and ptz-25x.webp:
 ## Administration
 
 The insert-only migration runs once on deployment; normal admin product editing manages all listings thereafter. Do not reapply supplier pricing over admin changes. Shop assets are accepted by the existing image-path validator. The estimate equipment catalogue is separate and unchanged.
+
+## Expanded equipment collection
+
+Migration 0013 adds 39 further listings from the remaining supplier offers: HD and IP cameras, plastic/metal/two-way-audio DVR variants, NVRs, a 4TB hard drive, 600–3000VA UPS units, CAT6 cable, router and switches, video intercom, fingerprint terminal, fence energizer, gate opener and solar cameras. Combined with 0012, these account for 51 supplier listings. Duplicate metallic DVR offers are included only once.
+
+Selling prices use the same authorised 1.33 multiplier, rounded to whole KES. Supplier costs and WhatsApp exports remain outside version control. Listings are available to order; unspecified recorder models and UPS watt ratings require confirmation before dispatch. Existing admin products/prices are not overwritten.
+
+### Additional image assets and prompts
+
+Final assets: `public/shop/dealer-00.webp`, `dealer-01-bullet.webp`, `dealer-01-turret.webp`, `dealer-02.webp` through `dealer-16.webp` (no 17), `dealer-18.webp` through `dealer-25.webp`, `ip-exir-bullet.webp`, and `tenda-8port.webp`. Dealer photos show the actual retail packaging where an unboxed product was not provided. Family images are identified in relevant descriptions. The supplied UPS image already had a white background. The Tenda 8-port illustrative image comes from https://www.tendacn.com/product/specification/531 .
+
+Built-in image-generation editing was used, not CLI generation. Prompt set:
+
+> Isolate the specified individual product or complete retail box from the supplier photograph on pure white. Remove other products and shop surroundings. Preserve packaging, printed illustration, logos and existing text. Correct perspective modestly, brighten neutrally and gently sharpen. Never invent an unboxed product from packaging. Square ecommerce composition with white margins.
+
+For physical dome camera: preserve lens, LEDs, dome housing and attached connectors. For fingerprint terminal: rotate the whole device upright, with the complete six-row keypad above the fingerprint reader. For HAWK solar camera: isolate the actual camera and rotate upright, preserving the two lenses, sensor, floodlights, antennas and bracket; do not invent a solar panel in the photo.
+
+Additional manufacturer reference: https://assets.hikvision.com/prd/normal/all/doc/m000077360/DS-2CD1021G0-I_Datasheet_20260409.pdf . The extracted bullet image was edited only to replace black background with white and improve clarity, preserving camera geometry and branding.
