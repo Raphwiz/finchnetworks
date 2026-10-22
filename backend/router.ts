@@ -15,7 +15,7 @@ import {categories} from '@/shared/models';
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 const previewHits=new Map<string,number[]>();
 function str(v:unknown,max=5000){if(typeof v!=='string'||v.length>max)throw new Error('Please check the text fields.');return v.trim();}
-function imagePath(v:unknown){const p=str(v,200);if(p&&p!=='/solar-cctv.webp'&&!/^\/api\/media\/[a-f0-9-]+\.(png|jpg|webp)$/.test(p))throw new Error('Upload an image first.');return p;}
+function imagePath(v:unknown){const p=str(v,200);if(p&&p!=='/solar-cctv.webp'&&!/^\/shop\/[a-z0-9-]+\.(png|jpg|webp)$/.test(p)&&!/^\/api\/media\/[a-f0-9-]+\.(png|jpg|webp)$/.test(p))throw new Error('Upload an image first.');return p;}
 function projectImages(body:Record<string,any>){const raw=Array.isArray(body.images)?body.images:(body.image?[body.image]:[]);if(raw.length>12)throw new Error('Add up to 12 photos for one project.');const images:string[]=[];for(const item of raw){if(typeof item!=='string')throw new Error('Upload an image first.');const path=imagePath(item);if(path&&!images.includes(path))images.push(path);}return images;}
 export async function handle(req:Request):Promise<Response>{try{
 const customerResponse=await customerAuthHandle(req);if(customerResponse)return customerResponse;
