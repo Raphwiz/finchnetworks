@@ -1,3 +1,4 @@
+import {receiptsHandle} from './receipts';
 import {enquiryStatuses,publicUpdates} from '@/shared/enquiry-updates';
 import {repairBody} from './repair';
 import {customerAuthHandle,currentCustomer} from './customer-auth';
@@ -19,6 +20,7 @@ function imagePath(v:unknown){const p=str(v,200);if(p&&p!=='/solar-cctv.webp'&&!
 function projectImages(body:Record<string,any>){const raw=Array.isArray(body.images)?body.images:(body.image?[body.image]:[]);if(raw.length>12)throw new Error('Add up to 12 photos for one project.');const images:string[]=[];for(const item of raw){if(typeof item!=='string')throw new Error('Upload an image first.');const path=imagePath(item);if(path&&!images.includes(path))images.push(path);}return images;}
 export async function handle(req:Request):Promise<Response>{try{
 const customerResponse=await customerAuthHandle(req);if(customerResponse)return customerResponse;
+const receiptResponse=await receiptsHandle(req);if(receiptResponse)return receiptResponse;
 const commerceResponse=await commerceHandle(req);if(commerceResponse)return commerceResponse;
 const path=new URL(req.url).pathname.replace('/api/','');
 if(req.method==='POST'){const origin=req.headers.get('origin');if(origin&&origin!==new URL(req.url).origin)return json({error:'Request origin not allowed.'},403);}
