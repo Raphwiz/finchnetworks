@@ -17,7 +17,7 @@ const send=(path:string,body?:any,t=token,origin='https://finch.test')=>receipts
 assert.equal((await send('',undefined,''))!.status,403);assert.equal((await send('',input,regularToken))!.status,403);assert.equal((await send('',input,token,'https://evil.test'))!.status,403);
 assert.equal(validateReceipt(input).balance,-500);assert.equal(amountWords(27000),'Kenya shillings twenty seven thousand only');assert.equal(validateReceipt({...input,lines:[{name:'Cable',quantity:1.5,unitPrice:1.01}],paid:1.52}).total,1.52);
 for(const bad of [{paid:0},{paid:-5},{discount:999999},{date:'2026-02-30'},{lines:[]},{paymentReference:''}])assert.throws(()=>validateReceipt({...input,...bad}));
-assert.equal((await send('/preview',input))!.status,200);assert.equal((await db.prepare('SELECT count(*) n FROM issued_receipts').first<any>()).n,0);
+const preview=await send('/preview',input);assert.equal(preview!.status,200);const previewData=await preview!.json();assert.ok((await PDFDocument.load(Buffer.from(previewData.pdf,'base64'))).getPageCount()>0);assert.equal((await db.prepare('SELECT count(*) n FROM issued_receipts').first<any>()).n,0);
 const first=await (await send('',input))!.json();const retry=await (await send('',{...input,name:'Changed'}))!.json();assert.equal(first.reference,retry.reference);assert.equal(retry.name,input.name);
 const second=await (await send('',{...input,id:crypto.randomUUID()}))!.json();assert.notEqual(first.reference,second.reference);
 assert.equal((await send('/'+first.id+'/pdf',undefined,regularToken))!.status,403);

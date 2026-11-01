@@ -23,7 +23,7 @@ export async function receiptsHandle(req:Request):Promise<Response|null>{
  const body=await req.json();const validated=validateReceipt(body);let sourceReference='';
  if(validated.sourceId){const source=await database().prepare("SELECT data FROM commerce WHERE id=? AND kind IN ('quote','order')").bind(validated.sourceId).first<any>();if(!source)throw Error('Linked quotation or order was not found.');sourceReference=JSON.parse(source.data).reference||'';}
  const brand=await settings();const data={...validated,sourceReference,brand:{phone:brand.phone,email:brand.email,area:brand.area}};
- if(path.endsWith('/preview'))return pdfResponse(await createWorkReceiptPdf({...data,reference:'PREVIEW - NOT ISSUED',preview:true}),'Finch-receipt-preview.pdf');
+ if(path.endsWith('/preview')){const bytes=await createWorkReceiptPdf({...data,reference:'PREVIEW - NOT ISSUED',preview:true});return json({pdf:Buffer.from(bytes).toString('base64')});}
  if(body.confirmed!==true)throw Error('Confirm that Finch has received this payment.');
  const user=await currentCustomer(req);
  // The client retains its unique ID across retries, so a repeated click cannot issue a second receipt.
