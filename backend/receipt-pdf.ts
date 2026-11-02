@@ -24,7 +24,7 @@ export async function createWorkReceiptPdf(d:Input){
  heading('GOODS / SERVICES PURCHASED');
  const cols=[28,252,52,94,102];
  const tableHeader=()=>{need(25);page.drawRectangle({x:left,y:y-8,width,height:22,color:navy});let x=left;['No.','Description of Goods / Services','Qty','Unit Price (KES)','Amount (KES)'].forEach((s,i)=>{text(s,x+4,y,8,true,white);x+=cols[i];});y-=24;};tableHeader();
- const displayLines=[...d.lines,...Array.from({length:Math.max(0,8-d.lines.length)},()=>null)];
+ const displayLines=d.lines;
  displayLines.forEach((l,index)=>{const names=wrap(l?.name||'',cols[1]-10,9);const height=l?Math.max(20,names.length*11+7):16;if(y-height<62){need(height);tableHeader();}let x=left;for(const w of cols){page.drawRectangle({x,y:y-height+11,width:w,height,borderWidth:.5,borderColor:grey,...(index%2?{color:rgb(.97,.98,.99)}:{})});x+=w;}text(String(index+1),left+6,y,9);if(l){names.forEach((s,i)=>text(s,left+cols[0]+5,y-i*12));text(/\blabou?r\b/i.test(l.name)?'Service':String(l.quantity),left+cols[0]+cols[1]+3,y,8);const a=cash(l.unitPrice),b=cash(l.total);text(a,right-cols[4]-6-regular.widthOfTextAtSize(a,9),y);text(b,right-6-regular.widthOfTextAtSize(b,9),y);}y-=height;});y-=14;
  const notes=[`Payment Reference: ${d.paymentReference||'Cash'}`,`Amount in Words: ${amountWords(d.paid)}`,d.notes?`Notes: ${d.notes}`:'',d.voidReason?`VOID REASON: ${d.voidReason}`:''].filter(Boolean).flatMap(s=>[...wrap(s,273,8),'']);
  const separateNotes=notes.length*10>420;if(separateNotes){for(const line of notes){need(12);text(line,left,y,8);y-=10;}y-=12;}const blockHeight=separateNotes?133:Math.max(133,notes.length*10);need(blockHeight+15);const top=y;if(!separateNotes)notes.forEach((s,i)=>text(s,left,top-i*10,8));const tx=330,tw=240;
