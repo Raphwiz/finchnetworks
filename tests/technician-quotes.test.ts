@@ -1,0 +1,14 @@
+import './receipts.test';
+import assert from 'node:assert/strict';
+import {database} from '../backend/database';
+import {commerceHandle} from '../backend/commerce';
+const db=database();const send=(path:string,body?:any,token='b'.repeat(64))=>commerceHandle(new Request('https://finch.test/api/commerce/'+path,{method:body?'POST':'GET',headers:{cookie:'finch_customer='+token,origin:'https://finch.test','content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})}));
+assert.equal((await send('technician'))!.status,403);
+await db.prepare('INSERT INTO technician_users VALUES (?)').bind('test-customer').run();
+const payload={name:'Test client',phone:'0700000000',location:'Test',project:'Test',lines:[{name:'Installation',quantity:1,unitPrice:100}],deposit:0,expires:'2099-01-01',terms:'Test terms',status:'quoted'};
+const res=await send('technician',payload);assert.equal(res!.status,200);const q=await res!.json();assert.equal(q.status,'draft');assert.equal(q.preparedById,'test-customer');
+assert.equal((await send('admin'))!.status,403);assert.equal((await send('admin/quote',payload))!.status,403);assert.equal((await send('technician',{...payload,id:q.id}))!.status,400);
+await assert.rejects(()=>send('quote/'+q.id+'/pdf'));
+const list=await (await send('technician'))!.json();assert.equal(list.records.length,1);
+const approved=await (await send('admin/quote',{...q,status:'quoted'},'a'.repeat(64)))!.json();assert.equal(approved.status,'quoted');assert.equal(approved.approvedBy,'test-admin');assert.equal(approved.preparedById,'test-customer');assert.equal((await send('quote/'+q.id+'/pdf'))!.status,200);
+console.log('PASS: restricted role, private draft, forced approval, admin approval audit and approved PDF.');
