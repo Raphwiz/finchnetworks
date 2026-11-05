@@ -1,0 +1,8 @@
+'use client';
+import {useEffect,useRef,useState} from 'react';
+export default function QuotationPdf({href}:{href:string}){
+ const [url,setUrl]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');const objectUrl=useRef('');const active=useRef(true);
+ useEffect(()=>{active.current=true;return()=>{active.current=false;if(objectUrl.current)URL.revokeObjectURL(objectUrl.current);};},[]);
+ async function preview(){if(busy)return;setBusy(true);setError('');try{const response=await fetch(href);if(!response.ok)throw Error('Unable to load this quotation. Please refresh and try again.');if(!response.headers.get('content-type')?.includes('application/pdf'))throw Error('Please sign in again to view this quotation.');const blob=await response.blob();if(!active.current)return;if(objectUrl.current)URL.revokeObjectURL(objectUrl.current);objectUrl.current=URL.createObjectURL(blob);setUrl(objectUrl.current);}catch(e){if(active.current)setError((e as Error).message);}finally{if(active.current)setBusy(false);}}
+ return <div><div className="actions"><button type="button" className="button" disabled={busy} onClick={()=>url?setUrl(''):preview()}>{busy?'Loading PDF…':url?'Close PDF preview':'Preview quotation PDF'}</button><a className="textlink" href={href}>Download PDF</a></div>{error&&<p className="error" role="alert">{error}</p>}{url&&<section aria-label="Quotation PDF preview"><p><a href={url} target="_blank" rel="noreferrer">Open preview in a new tab</a></p><iframe title="Finch quotation PDF preview" src={url} style={{width:'100%',height:'75vh',minHeight:400,border:'1px solid #cbdde2',borderRadius:8}}/></section>}</div>;
+}
