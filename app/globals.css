@@ -212,3 +212,5 @@ footer.site-footer{background-color:#103c40;background-image:linear-gradient(90d
 .finch-home .hero{background-image:linear-gradient(90deg,#fff 0%,#fffffff2 30%,#ffffff40 70%,#ffffff00),url('/finch-hero-network.svg'),radial-gradient(ellipse at 90% 12%,#e3f2ed 0%,#f4faf7 45%,#fff 80%);background-size:cover,auto 100%,cover;background-position:center,right center,center;background-repeat:no-repeat}
 @media(max-width:620px){.finch-home .hero{background-image:linear-gradient(180deg,#ffffffed,#ffffff88 55%,#fff),url('/finch-hero-network.svg');background-size:cover,auto 100%;background-position:center,right center}}
 @media print{.finch-home .hero{background-image:none}}
+
+.new-quotation-page{max-width:1100px}.new-quotation-page form>h2{font-size:20px;border-bottom:1px solid #dce8eb;padding:16px 0 10px;margin-top:20px;color:#07696b}.new-quotation-page .page-heading{margin-top:22px}.new-quotation-page .quote-line{padding:14px;background:#f5f9fa;border-radius:10px}
