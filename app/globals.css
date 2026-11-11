@@ -245,3 +245,4 @@ footer.site-footer{background-color:#103c40;background-image:linear-gradient(90d
 }
 
 .cctv-equipment-quantity{width:4.25rem;max-width:100%;padding:5px 6px;border:1px solid #b4ced8;border-radius:6px;background:#fff;color:#123a4c;font:inherit}
+.cctv-controls .cctv-count { margin-top: 12px; }
