@@ -1,3 +1,4 @@
+import {drawLetterhead} from './letterhead';
 import {PDFDocument,StandardFonts,rgb} from 'pdf-lib';
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -8,11 +9,11 @@ const clean=(v:unknown)=>String(v??'').replace(/[\u2018\u2019]/g,"'").replace(/[
 const cash=(v:number)=>v.toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
 export async function createWorkReceiptPdf(d:Input){
  const pdf=await PDFDocument.create();const regular=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
- const logo=await pdf.embedPng(await readFile(join(process.cwd(),'seed/receipt-logo.png')));const stamp=await pdf.embedPng(await readFile(join(process.cwd(),'seed/receipt-stamp.png')));
+ const logo=await pdf.embedPng(await readFile(join(process.cwd(),'public/finch-logo.png')));const stamp=await pdf.embedPng(await readFile(join(process.cwd(),'seed/receipt-stamp.png')));
  const left=42,right=570,width=528;let page=pdf.addPage([612,792]),y=0;
  const text=(s:string,x:number,top:number,size=9,strong=false,color=navy)=>page.drawText(clean(s),{x,y:top,size,font:strong?bold:regular,color});
  const wrap=(s:string,max:number,size=9,strong=false)=>{const font=strong?bold:regular;const result:string[]=[];for(const block of clean(s).split('\n')){let line='';for(const word of block.split(/\s+/)){if(font.widthOfTextAtSize(word,size)>max){if(line){result.push(line);line='';}for(const ch of word){if(font.widthOfTextAtSize(line+ch,size)>max){result.push(line);line='';}line+=ch;}}else if(font.widthOfTextAtSize(line?line+' '+word:word,size)<=max)line=line?line+' '+word:word;else{result.push(line);line=word;}}result.push(line);}return result;};
- const header=()=>{const dim=logo.scaleToFit(176,78);page.drawImage(logo,{x:left,y:704,width:dim.width,height:dim.height});text('OFFICIAL RECEIPT',366,755,19,true);const contacts=[`Phone: ${d.brand.phone}`,`Email: ${d.brand.email}`,d.brand.area];let cy=734;for(const c of contacts)for(const line of wrap(c||'',204,8)){text(line,366,cy,8);cy-=10;}text('ICT - SECURITY - CONNECTIVITY',left,691,9,true,gold);page.drawLine({start:{x:left,y:684},end:{x:right,y:684},color:gold,thickness:2});y=665;};
+ const header=()=>{y=drawLetterhead(page,regular,bold,logo,d.brand,left,right);text('OFFICIAL RECEIPT',left,y,18,true);y-=24;};
  const need=(h:number)=>{if(y-h<62){page=pdf.addPage([612,792]);header();text(d.reference+' (continued)',left,y,9,true);y-=22;}};
  const para=(s:string,size=9)=>{for(const line of wrap(s,width,size)){need(size+5);text(line,left,y,size);y-=size+4;}y-=5;};
  const heading=(s:string)=>{need(26);text(s,left,y,10,true);y-=18;};
