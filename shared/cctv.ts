@@ -2,7 +2,7 @@ import type {Product} from './models';
 export const cameraBrands=['hikvision','dahua'] as const;
 export type CameraBrand=typeof cameraBrands[number];
 export const cameraBrandLabel:Record<CameraBrand,string>={hikvision:'Hikvision',dahua:'Dahua'};
-export const editableCctvItems = ['cctv-rj45','cctv-box','cctv-bnc','cctv-dc','cctv-cat6','cctv-rg59','cctv-rg59-50','cctv-rg59-100','cctv-rg59-200','cctv-extension','cctv-hdmi-3','cctv-hdmi-5','cctv-hdmi-10'] as const;
+export const editableCctvItems = ['cctv-hdd-0.5','cctv-hdd-1','cctv-hdd-2','cctv-hdd-4','cctv-rj45','cctv-box','cctv-bnc','cctv-dc','cctv-cat6','cctv-rg59','cctv-rg59-50','cctv-rg59-100','cctv-rg59-200','cctv-extension','cctv-hdmi-3','cctv-hdmi-5','cctv-hdmi-10'] as const;
 export type EditableCctvItem = typeof editableCctvItems[number];
 export function isEditableCctvItem(id: string): id is EditableCctvItem {
   return (editableCctvItems as readonly string[]).includes(id);
