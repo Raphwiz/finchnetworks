@@ -9,6 +9,12 @@ const payload={name:'Test client',phone:'0700000000',location:'Test',project:'Te
 const res=await send('technician',payload);assert.equal(res!.status,200);const q=await res!.json();assert.equal(q.status,'draft');assert.equal(q.total,4700);assert.equal(q.lines[1].quantity,1);assert.equal(q.lines[1].labour,true);assert.equal(q.preparedById,'test-customer');
 assert.equal((await send('admin'))!.status,403);assert.equal((await send('admin/quote',payload))!.status,403);assert.equal((await send('technician',{...payload,id:q.id}))!.status,400);
 await assert.rejects(()=>send('quote/'+q.id+'/pdf'));
+await assert.rejects(()=>send('quote/'+q.id+'/pdf?format=base64'));
+assert.equal((await send('admin/quote/'+q.id+'/pdf?format=base64'))!.status,403);
+const previewResponse=await send('admin/quote/'+q.id+'/pdf?format=base64',undefined,'a'.repeat(64));
+const preview=await previewResponse!.json();
+assert.equal(Buffer.from(preview.pdf,'base64').subarray(0,5).toString(),'%PDF-');
+
 const list=await (await send('technician'))!.json();assert.equal(list.records.length,1);
 const approved=await (await send('admin/quote',{...q,status:'quoted'},'a'.repeat(64)))!.json();assert.equal(approved.status,'quoted');assert.equal(approved.approvedBy,'test-admin');assert.equal(approved.preparedById,'test-customer');assert.equal((await send('quote/'+q.id+'/pdf'))!.status,200);
 console.log('PASS: restricted role, private draft, forced approval, admin approval audit and approved PDF.');
