@@ -26,6 +26,12 @@ const commerceResponse=await commerceHandle(req);if(commerceResponse)return comm
 const path=new URL(req.url).pathname.replace('/api/','');
 if(req.method==='POST'){const origin=req.headers.get('origin');if(origin&&origin!==new URL(req.url).origin)return json({error:'Request origin not allowed.'},403);}
 if(path.startsWith('media/')&&req.method==='GET'){const key=path.slice(6);if(!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))return json({error:'Not found'},404);const object=await media().get(key);if(!object)return json({error:'Not found'},404);return new Response(object.body,{headers:{'Content-Type':object.httpMetadata?.contentType||'application/octet-stream','Cache-Control':'public,max-age=86400','X-Content-Type-Options':'nosniff'}});}
+if(path==='estimate-role'&&req.method==='GET'){
+  if(await isAdmin(req))return json({role:'admin'});
+  const customer=await currentCustomer(req);
+  const technician=customer&&await database().prepare('SELECT customer_id FROM technician_users WHERE customer_id=?').bind(customer.id).first();
+  return json({role:technician?'technician':null});
+}
 if(path==='settings'&&req.method==='GET')return json(await settings());
 if(path==='catalog'&&req.method==='GET')return json({products:await products(),projects:await projects(),settings:await settings()});
 if(path.startsWith('estimate/')&&req.method==='GET'&&path!=='estimate/preview'){const id=path.slice(9);if(!/^[a-f0-9-]{36}$/.test(id))return json({error:'Not found'},404);const row=await database().prepare('SELECT data FROM enquiries WHERE id=?').bind(id).first<{data:string}>();if(!row)return json({error:'Not found'},404);const data=JSON.parse(row.data);return pdfResponse(await createEstimatePdf(data,await settings()),`Finch-${data.reference||'estimate'}.pdf`);}
