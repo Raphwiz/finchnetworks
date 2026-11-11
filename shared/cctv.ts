@@ -2,7 +2,24 @@ import type {Product} from './models';
 export const cameraBrands=['hikvision','dahua'] as const;
 export type CameraBrand=typeof cameraBrands[number];
 export const cameraBrandLabel:Record<CameraBrand,string>={hikvision:'Hikvision',dahua:'Dahua'};
-export type CctvConfig={brand:CameraBrand;system:'hd'|'ip';cameras:number;channels:4|8|16|32|64;resolution:2|4;audio:boolean;storage:0.5|1|2|4;rg59Length?:50|100|200;monitor:boolean;backup:boolean;monitorSize:24|32|43|55|65;upsCapacity:600|800|1000|1500|2000;hdmiLength:3|5|10};
+export const editableCctvItems = ['cctv-rj45','cctv-box','cctv-bnc','cctv-dc','cctv-cat6','cctv-rg59','cctv-rg59-50','cctv-rg59-100','cctv-rg59-200','cctv-extension','cctv-hdmi-3','cctv-hdmi-5','cctv-hdmi-10'] as const;
+export type EditableCctvItem = typeof editableCctvItems[number];
+export function isEditableCctvItem(id: string): id is EditableCctvItem {
+  return (editableCctvItems as readonly string[]).includes(id);
+}
+function validateQuantities(value: unknown): CctvConfig['quantities'] {
+  if (value === undefined) return;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('Check your equipment quantities.');
+  const quantities: NonNullable<CctvConfig['quantities']> = {};
+  for (const [id, quantity] of Object.entries(value)) {
+    if (!isEditableCctvItem(id) || !Number.isInteger(quantity) || quantity < 1 || quantity > 200) {
+      throw Error('Enter equipment quantities from 1 to 200.');
+    }
+    quantities[id] = quantity;
+  }
+  return quantities;
+}
+export type CctvConfig={quantities?:Partial<Record<EditableCctvItem,number>>;brand:CameraBrand;system:'hd'|'ip';cameras:number;channels:4|8|16|32|64;resolution:2|4;audio:boolean;storage:0.5|1|2|4;rg59Length?:50|100|200;monitor:boolean;backup:boolean;monitorSize:24|32|43|55|65;upsCapacity:600|800|1000|1500|2000;hdmiLength:3|5|10};
 export const defaultCctv:CctvConfig={brand:'hikvision',system:'ip',cameras:4,channels:4,resolution:2,audio:true,storage:1,monitor:false,backup:false,monitorSize:24,upsCapacity:600,hdmiLength:3};
 export const channelOptions={hd:[4,8,16,32],ip:[4,8,16,32,64]} as const;
 export const cameraLimit=(system:CctvConfig['system'])=>system==='hd'?32:64;
@@ -30,7 +47,7 @@ part('extension','Power extension strip','strip','For the viewing equipment. Soc
 part('monitor','Viewing monitor','monitor'),part('ups','Recorder backup power / UPS','unit','Size and backup duration to be confirmed against the final connected load.')];
 export function cctvSummary(c:CctvConfig){return `${cameraBrandLabel[c.brand]} · ${c.cameras} cameras · ${c.system==='ip'?'IP / NVR':'HD / DVR-XVR'} · ${c.channels} channels · ${c.resolution}MP · With audio · ${c.storage===0.5?'500GB':c.storage+'TB'} storage${c.system==='hd'&&c.rg59Length?` · ${c.rg59Length}m RG59 cable`:''}${c.monitor?` · ${c.monitorSize??24}-inch display · ${c.hdmiLength??3}m HDMI + power extension`:``}${c.backup?` · ${c.upsCapacity??600}VA UPS`:``}`;}
 
-export function validateCctv(value:unknown):CctvConfig{if(!value||typeof value!=='object')throw new Error('Choose a CCTV configuration.');const c=value as CctvConfig;if(!(cameraBrands as readonly string[]).includes(c.brand))throw new Error('Choose Hikvision or Dahua before continuing.');if(!['hd','ip'].includes(c.system)||!Number.isInteger(c.cameras)||c.cameras<1||c.cameras>cameraLimit(c.system)||!(channelOptions[c.system] as readonly number[]).includes(c.channels)||c.cameras>c.channels||![2,4].includes(c.resolution)||(c.audio!==undefined&&typeof c.audio!=='boolean')||![0.5,1,2,4].includes(c.storage)||typeof c.monitor!=='boolean'||typeof c.backup!=='boolean')throw new Error('Check your CCTV choices. Camera count must fit the recorder capacity.');const monitorSize=c.monitorSize===undefined?24:c.monitorSize;const upsCapacity=c.upsCapacity===undefined?600:c.upsCapacity;const hdmiLength=c.hdmiLength===undefined?3:c.hdmiLength;if(![24,32,43,55,65].includes(monitorSize)||![600,800,1000,1500,2000].includes(upsCapacity)||![3,5,10].includes(hdmiLength))throw new Error('Choose a listed monitor size, UPS capacity and HDMI cable length.');if(c.rg59Length!==undefined&&![50,100,200].includes(c.rg59Length))throw Error('Choose 50m, 100m or 200m RG59 cable.');return {rg59Length:c.rg59Length,brand:c.brand,monitorSize,upsCapacity,hdmiLength,system:c.system,cameras:c.cameras,channels:c.channels,resolution:c.resolution,audio:true,storage:c.storage,monitor:c.monitor,backup:c.backup};}
+export function validateCctv(value:unknown):CctvConfig{if(!value||typeof value!=='object')throw new Error('Choose a CCTV configuration.');const c=value as CctvConfig;if(!(cameraBrands as readonly string[]).includes(c.brand))throw new Error('Choose Hikvision or Dahua before continuing.');if(!['hd','ip'].includes(c.system)||!Number.isInteger(c.cameras)||c.cameras<1||c.cameras>cameraLimit(c.system)||!(channelOptions[c.system] as readonly number[]).includes(c.channels)||c.cameras>c.channels||![2,4].includes(c.resolution)||(c.audio!==undefined&&typeof c.audio!=='boolean')||![0.5,1,2,4].includes(c.storage)||typeof c.monitor!=='boolean'||typeof c.backup!=='boolean')throw new Error('Check your CCTV choices. Camera count must fit the recorder capacity.');const monitorSize=c.monitorSize===undefined?24:c.monitorSize;const upsCapacity=c.upsCapacity===undefined?600:c.upsCapacity;const hdmiLength=c.hdmiLength===undefined?3:c.hdmiLength;if(![24,32,43,55,65].includes(monitorSize)||![600,800,1000,1500,2000].includes(upsCapacity)||![3,5,10].includes(hdmiLength))throw new Error('Choose a listed monitor size, UPS capacity and HDMI cable length.');if(c.rg59Length!==undefined&&![50,100,200].includes(c.rg59Length))throw Error('Choose 50m, 100m or 200m RG59 cable.');return {quantities:validateQuantities(c.quantities),rg59Length:c.rg59Length,brand:c.brand,monitorSize,upsCapacity,hdmiLength,system:c.system,cameras:c.cameras,channels:c.channels,resolution:c.resolution,audio:true,storage:c.storage,monitor:c.monitor,backup:c.backup};}
 
 // Estimating allowance, not a camera datasheet rating. Split large systems into
 // separate supplies (never parallel outputs); confirm wiring and voltage drop on site.
