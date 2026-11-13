@@ -258,3 +258,24 @@ footer.site-footer{background-color:#103c40;background-image:linear-gradient(90d
 }
 
 .invoice-payment-details { background: #fff7e3; border-color: #e9b843; color: #69400f; }
+
+.payment-settings { max-width: 960px; padding: clamp(18px, 3vw, 30px); }
+.payment-settings-header, .payment-heading, .payment-current, .payment-actions { display: flex; align-items: center; gap: 14px; }
+.payment-settings-header { justify-content: space-between; flex-wrap: wrap; margin-bottom: 22px; }
+.payment-heading h2, .payment-heading p { margin: 0; }
+.payment-heading p { margin-top: 4px; color: #526975; font-size: .88rem; }
+.payment-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 12px; background: #e5f4f1; color: #14605a; }
+.payment-status { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; padding: 6px 11px; background: #fff4d8; color: #76500f; font-size: .8rem; font-weight: 700; }
+.payment-status[data-enabled="true"] { background: #e4f6ec; color: #176246; }
+.payment-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.payment-current { padding: 14px 16px; margin-bottom: 22px; border: 1px solid #d7e7e7; border-radius: 10px; background: #f1f8f8; color: #145754; }
+.payment-current svg { flex: none; }
+.payment-current span, .payment-current strong { display: block; overflow-wrap: anywhere; }
+.payment-current span { font-size: .8rem; margin-bottom: 3px; }
+.payment-actions { flex-wrap: wrap; gap: 10px; }
+.payment-actions .button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.payment-settings .payment-secondary { border: 1px solid #b9d0d0; color: #145754; background: #fff; }
+.payment-settings .form .payment-confirm { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; padding: 12px; border-radius: 8px; background: #f4f7f8; }
+.payment-settings .payment-confirm input { width: 17px; height: 17px; flex: none; margin: 2px 0 0; accent-color: #14605a; }
+.payment-register { border-top: 1px solid #dce7e9; margin-top: 24px; padding-top: 20px; }
+.payment-register h3 { margin: 0 0 14px; }
