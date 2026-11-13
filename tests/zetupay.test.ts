@@ -81,5 +81,29 @@ try{
  const paid=await (await send('quote/'+quoteId))!.json();
  assert.equal(paid.status,'paid');
  assert.equal(paid.payment.amount,1500);
+ const orderId=crypto.randomUUID();
+ const shopQuoteId=crypto.randomUUID();
+ await db.prepare("INSERT INTO commerce(id,kind,data,status,created_at,customer_id) VALUES (?,'order',?,'accepted',?,'test-admin')")
+  .bind(orderId,JSON.stringify({reference:'ORD-ZETUPAY',phone:'0700000000'}),Date.now()).run();
+ await db.prepare("INSERT INTO commerce(id,kind,data,status,created_at) VALUES (?,'quote',?,'accepted',?)")
+  .bind(shopQuoteId,JSON.stringify({sourceId:orderId,reference:'QUO-SHOP',total:1700,deposit:0,phone:'0700000000'}),Date.now()).run();
+ assert.equal((await send('stk',{id:orderId}))!.status,401);
+ const shopOrder=await (await send('order/'+orderId,undefined,true))!.json();
+ assert.equal(shopOrder.stkReady,true);
+ assert.equal(shopOrder.amountDue,1700);
+ const shopPrompts=await Promise.all([send('stk',{id:orderId},true),send('quote/stk',{id:shopQuoteId})]);
+ assert.ok(shopPrompts.every(response=>response?.ok));
+ assert.equal(payments.size,3);
+ const shopPayment=[...payments.values()][2];
+ assert.equal(shopPayment.amount,1700);
+ const pendingOrder=await (await send('order/'+orderId,undefined,true))!.json();
+ assert.equal(pendingOrder.stkSent.amount,1700);
+ shopPayment.status='success';
+ shopPayment.receiptNumber='TESTSHOP123';
+ await db.prepare('UPDATE zetupay_attempts SET checked_at=0 WHERE quote_id=?').bind(shopQuoteId).run();
+ const paidOrder=await (await send('order/'+orderId,undefined,true))!.json();
+ assert.equal(paidOrder.status,'paid');
+ assert.equal(paidOrder.quote.payment.amount,1700);
+ console.log('PASS: shop ownership, shared attempt, in-page reconciliation and paid order.');
  console.log('PASS: admin access, prompt idempotency, channel switch, signed callback, mismatch rejection, deposit and balance.');
 }finally{globalThis.fetch=realFetch;}
