@@ -104,6 +104,48 @@ try{
  const paidOrder=await (await send('order/'+orderId,undefined,true))!.json();
  assert.equal(paidOrder.status,'paid');
  assert.equal(paidOrder.quote.payment.amount,1700);
+ const item='direct-test-stock';
+ await db.prepare('INSERT INTO products(id,data) VALUES (?,?)')
+  .bind(item,JSON.stringify({id:item,name:'Test equipment',unit:'unit',published:true,featured:true,price:700,stockQuantity:2})).run();
+ const stock=async()=>Number((await db.prepare("SELECT json_extract(data,'$.stockQuantity') n FROM products WHERE id=?").bind(item).first<{n:number}>())?.n);
+ const checkout={id:crypto.randomUUID(),name:'Test buyer',phone:'0700000000',location:'Meru',consent:true,fulfilment:'collection',items:[{id:item,quantity:2}]};
+ assert.equal((await send('order',checkout,true))!.status,201);
+ assert.equal((await send('stk',{id:checkout.id},true))!.status,200);
+ assert.equal(await stock(),2);
+ const second={...checkout,id:crypto.randomUUID()};
+ assert.equal((await send('order',second,true))!.status,201);
+ await assert.rejects(()=>send('stk',{id:second.id},true),/stock or price changed/i);
+ const directPayment=[...payments.values()].at(-1)!;
+ assert.equal(directPayment.amount,1400);
+ directPayment.status='success';
+ directPayment.receiptNumber='TESTDIRECT123';
+ const directCallbacks=await Promise.all([callback(String(directPayment.reference)),callback(String(directPayment.reference))]);
+ assert.ok(directCallbacks.every(response=>response?.ok));
+ assert.equal(await stock(),0);
+ const directOrder=await (await send('order/'+checkout.id,undefined,true))!.json();
+ assert.equal(directOrder.status,'paid');
+ assert.equal(directOrder.payment.amount,1400);
+ assert.equal((await send('shop-receipt/'+checkout.id,undefined,true))!.headers.get('content-type'),'application/pdf');
+
+ const approved=await (await send('admin/quote',{
+  name:'Test buyer',phone:'0700000000',lines:[{name:'Installation',quantity:1,unitPrice:1000}],
+  expires:'2099-01-01',terms:'Test terms',status:'quoted',
+ },true))!.json();
+ assert.equal(approved.deposit,800);
+ assert.equal((await send('accept',{id:approved.id,revision:approved.revision,name:'Test buyer',accept:true}))!.status,200);
+ assert.equal((await send('quote/stk',{id:approved.id}))!.status,200);
+ const workDeposit=[...payments.values()].at(-1)!;
+ assert.equal(workDeposit.amount,800);
+ workDeposit.status='success';
+ workDeposit.receiptNumber='TESTWORK123';
+ assert.equal((await callback(String(workDeposit.reference)))!.status,200);
+ const work=await (await send('quote/'+approved.id))!.json();
+ assert.equal(work.status,'deposit-paid');
+ assert.match(work.workStartDate,/^\d{4}-\d{2}-\d{2}$/);
+ assert.equal(work.amountDue,null);
+ assert.equal((await send('admin/status',{id:approved.id,revision:work.revision,status:'completed'},true))!.status,200);
+ assert.equal((await (await send('quote/'+approved.id))!.json()).amountDue,200);
+ console.log('PASS: direct shop checkout, stock holds, atomic deduction, receipts, 80% deposit and completion balance.');
  console.log('PASS: shop ownership, shared attempt, in-page reconciliation and paid order.');
  console.log('PASS: admin access, prompt idempotency, channel switch, signed callback, mismatch rejection, deposit and balance.');
 }finally{globalThis.fetch=realFetch;}
