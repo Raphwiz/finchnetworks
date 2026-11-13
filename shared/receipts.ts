@@ -2,7 +2,9 @@ export const receiptNotes='Goods received in good condition. Warranty applies on
 export const paymentMethods=['M-Pesa','Cash','Bank transfer','Cheque','Card','Other'] as const;
 export type ReceiptLine={name:string;quantity:number;unitPrice:number;total:number};
 export type ReceiptData={id:string;name:string;phone:string;address:string;date:string;method:string;paymentReference:string;authorizedBy:string;sourceId:string;sourceReference:string;notes:string;lines:ReceiptLine[];subtotal:number;discount:number;vat:number;total:number;paid:number;previousPaid:number;balance:number;brand:{phone:string;email:string;area:string}};
-export type InvoiceData=Omit<ReceiptData,'method'|'paymentReference'|'paid'>&{dueDate:string};
+export type InvoiceData=Omit<ReceiptData,'method'|'paymentReference'|'paid'>&{dueDate:string;previousUnpaidBalance?:number};
+export const invoiceLocation='Meru, Kenya';
+export const invoicePaymentDetails={recipient:'Finch Networks Ltd',paybill:'880100',account:'089754'};
 export function invoiceReference(number:number){return `FN-INV-${String(number).padStart(6,'0')}`;}
 export function receiptReference(number:number){return `FN-RCP-${String(number).padStart(6,'0')}`;}
 export function amountWords(amount:number):string{
@@ -22,7 +24,9 @@ export function validateInvoice(b:any){
  const {data,balance}=validateDocument(b,'invoice');
  const dueDate=validDocumentDate(b.dueDate,'due date');
  if(dueDate<data.date)throw Error('The due date cannot be before the invoice issue date.');
- return {...data,dueDate,balance:balance/100};
+ const previousUnpaid=money(b.previousUnpaidBalance??0,'previous unpaid balance');
+ if(balance+previousUnpaid>10000000000)throw Error('Check the invoice amount due.');
+ return {...data,dueDate,previousUnpaidBalance:previousUnpaid/100,balance:(balance+previousUnpaid)/100};
 }
 function validDocumentDate(value:unknown,label:string){
  if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(value))||new Date(value).toISOString().slice(0,10)!==value)throw Error(`Choose a valid ${label}.`);
