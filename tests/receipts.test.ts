@@ -24,4 +24,45 @@ assert.equal((await send('/'+first.id+'/pdf',undefined,regularToken))!.status,40
 const pdf=await createWorkReceiptPdf({...validateReceipt(input),sourceReference:'',brand:{phone:'+254707625129',email:'finchnetworkslimited@gmail.com',area:'Meru, Kenya'},reference:'SAMPLE - NOT ISSUED',preview:true});writeFileSync('work/receipt-sample.pdf',pdf);console.log('Sample pages:',(await PDFDocument.load(pdf)).getPageCount());
 const long=await createWorkReceiptPdf({...validateReceipt({...input,lines:Array.from({length:40},(_,i)=>({name:'Long service description '+i+' with detailed installation and commissioning requirements '.repeat(2),quantity:1,unitPrice:1000})),notes:'Extended notes '.repeat(100)}),sourceReference:'',brand:{phone:'0700000000',email:'example@example.test',area:'Meru'},reference:'LONG SAMPLE',preview:true});writeFileSync('work/receipt-long-sample.pdf',long);
 await send('/'+first.id+'/void',{reason:'Test correction'});const saved=await (await send(''))!.json();assert.equal(saved.receipts.find((r:any)=>r.id===first.id).voidReason,'Test correction');assert.equal(saved.receipts.find((r:any)=>r.id===first.id).paid,27000);
-console.log('Passed: access control, CSRF, validation, rounding, credit, preview, retry safety, numbering and void preservation.');
+console.log('Passed: access control, CSRF, validation, rounding, credit, preview, retry safety, numbering and void preservation.');
+
+const sendInvoice=(path:string,body?:unknown,t=token,origin='https://finch.test')=>receiptsHandle(
+ new Request('https://finch.test/api/admin/invoices'+path,{
+  method:body?'POST':'GET',
+  headers:{cookie:'finch_customer='+t,origin,'content-type':'application/json'},
+  ...(body?{body:JSON.stringify(body)}:{}),
+ }),
+);
+const invoiceInput={
+ id:input.id,name:input.name,phone:input.phone,address:input.address,date:input.date,dueDate:'2026-11-13',
+ lines:input.lines,discount:500,vat:1000,previousPaid:7000,confirmed:true,
+};
+const sourceId=crypto.randomUUID();const sourceReference='QUO-INVOICE-TEST';await db.prepare("INSERT INTO commerce(id,kind,data,status,created_at) VALUES (?,'quote',?,'deposit-paid',?)") .bind(sourceId,JSON.stringify({reference:sourceReference}),Date.now()).run();assert.equal((await sendInvoice('',undefined,regularToken))!.status,403);
+assert.equal((await sendInvoice('',invoiceInput,token,'https://evil.test'))!.status,403);
+await assert.rejects(sendInvoice('',{...invoiceInput,dueDate:'2026-10-29'}),/due date/);
+await assert.rejects(sendInvoice('',{...invoiceInput,confirmed:false}),/Confirm/);
+const invoicePreview=await (await sendInvoice('/preview',invoiceInput))!.json();
+assert.ok((await PDFDocument.load(Buffer.from(invoicePreview.pdf,'base64'))).getPageCount()>0);
+assert.deepEqual((await (await sendInvoice(''))!.json()).invoices,[]);
+
+const [issuedInvoice,retriedInvoice]=await Promise.all(
+ [invoiceInput,invoiceInput].map(async draft=>(await sendInvoice('',{...draft,sourceId}))!.json()),);
+assert.equal(issuedInvoice.reference,'FN-INV-000001');
+assert.deepEqual(retriedInvoice,issuedInvoice);
+assert.equal(issuedInvoice.total,27000);
+assert.equal(issuedInvoice.balance,20000);
+assert.equal(issuedInvoice.sourceReference,sourceReference);assert.equal(issuedInvoice.paid,undefined);
+assert.equal((await sendInvoice('/'+issuedInvoice.id+'/pdf',undefined,regularToken))!.status,403);
+const invoicePdf=await sendInvoice('/'+issuedInvoice.id+'/pdf');
+assert.equal(invoicePdf!.headers.get('content-type'),'application/pdf');
+const invoiceBytes=await invoicePdf!.arrayBuffer();
+assert.equal((await PDFDocument.load(invoiceBytes)).getTitle(),issuedInvoice.reference);
+writeFileSync('work/invoice-sample.pdf',Buffer.from(invoiceBytes));
+
+await sendInvoice('/'+issuedInvoice.id+'/void',{reason:'Test correction'});
+const invoiceRegister=await (await sendInvoice('?q=fn-inv-000001'))!.json();
+assert.equal(invoiceRegister.invoices.length,1);
+assert.equal(invoiceRegister.invoices[0].voidReason,'Test correction');
+assert.equal(invoiceRegister.invoices[0].balance,20000);
+assert.equal((await (await send('?q='+first.reference))!.json()).receipts[0].paid,27000);
+console.log('Passed: invoice access, due dates, preview, numbering, concurrent retry, download and register.');
