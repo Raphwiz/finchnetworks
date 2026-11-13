@@ -68,3 +68,19 @@ Make a backup, record `git rev-parse HEAD`, then `git pull --ff-only origin finc
 ## Existing local content
 
 The source includes service artwork, the solar camera and Starlink images, the five saved product edits and public business settings. First-start seeding inserts missing records only and is tracked in the migration ledger. Local customer records, sessions, test data and secrets are deliberately excluded. No completed projects were present to migrate. Review the seeded prices before launch.
+
+### ZetuPay quotation payments
+
+Set the Finch Networks ZetuPay wallet's live secret in the server environment as
+`ZETUPAY_SECRET_KEY`. Add
+`https://finchnetworksltd.com/api/commerce/zetupay/callback` as a transaction
+callback endpoint in the ZetuPay merchant dashboard. In **Admin → Business →
+Payment settings**, register or select the active PayBill, Till or bank channel
+for Finch Networks. The intended first destination is PayBill 880100, account
+089754. Confirm the destination shown in Admin before enabling prompts.
+
+Set `ZETUPAY_STK_ENABLED=true` after configuring the callback and selecting
+the destination. Verify a small live test quotation and confirm the funds
+arrive at the selected destination. Setting the flag to false stops new
+ZetuPay prompts while signed callbacks can still reconcile pending attempts.
+Keep legacy Daraja initiation disabled when operating with ZetuPay.
