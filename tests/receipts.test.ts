@@ -71,6 +71,15 @@ assert.equal((await sendInvoice('',undefined,regularToken))!.status,403);
 assert.equal((await sendInvoice('',invoiceInput,token,'https://evil.test'))!.status,403);
 await assert.rejects(sendInvoice('',{...invoiceInput,dueDate:'2026-10-29'}),/due date/);
 await assert.rejects(sendInvoice('',{...invoiceInput,confirmed:false}),/Confirm/);
+const fiveItemPreview=await (await sendInvoice('/preview',{
+ ...invoiceInput,sourceId,notes:'Thank you for your business.',
+ lines:[...invoiceInput.lines,...['Network cable','Power adaptor','Display to HDMI adapter cable'].map(
+  name=>({name,quantity:1,unitPrice:1000}),
+ )],
+}))!.json();
+const fiveItemPdf=Buffer.from(fiveItemPreview.pdf,'base64');
+assert.equal((await PDFDocument.load(fiveItemPdf)).getPageCount(),1);
+writeFileSync('work/invoice-five-items.pdf',fiveItemPdf);
 const invoicePreview=await (await sendInvoice('/preview',invoiceInput))!.json();
 assert.ok((await PDFDocument.load(Buffer.from(invoicePreview.pdf,'base64'))).getPageCount()>0);
 assert.deepEqual((await (await sendInvoice(''))!.json()).invoices,[]);
