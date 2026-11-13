@@ -27,7 +27,10 @@ export async function activeChannel(){
 
 function channelDetails(channel:Channel){
  const {name,type,paybillNumber,tillNumber,bankName,bankCode,accountNumber}=channel;
- return {id:String(channel.id),name,type,paybillNumber,tillNumber,bankName,bankCode,accountNumber};
+ const displayAccount=type==='bank'&&accountNumber
+  ? '••••'+(accountNumber.length>4?accountNumber.slice(-4):'')
+  : accountNumber;
+ return {id:String(channel.id),name,type,paybillNumber,tillNumber,bankName,bankCode,accountNumber:displayAccount};
 }
 
 export async function listChannels(){
