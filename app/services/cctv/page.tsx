@@ -1,4 +1,4 @@
 import CctvBuilder from '@/frontend/CctvBuilder';
 import {pageMeta} from '@/shared/seo';
-export const metadata=pageMeta('Build a Hikvision or Dahua CCTV system','Choose cameras, a recorder and storage, then send the list to Finch for a confirmed quotation.','/services/cctv');
+export const metadata=pageMeta('CCTV Installation in Meru','Plan a Hikvision or Dahua CCTV installation for your home or business in Meru. Choose your cameras and request a confirmed quote from Finch Networks.','/services/cctv');
 export default function Page(){return <CctvBuilder/>}
