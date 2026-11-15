@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect,useState} from 'react';
+import {Building2,Plus} from 'lucide-react';
 import {api} from './api';
 import {money} from '@/shared/models';
 
@@ -10,6 +11,7 @@ type Account={id:string;name:string;phone:string;address:string};
 type Work={id:string;work_date:string;location:string;description:string;labour:number;materials:number;invoice:string|null;invoice_id:string|null};
 
 export default function ServiceAccounts(){
+ const [accountsReady,setAccountsReady]=useState(false);
  const [accounts,setAccounts]=useState<Account[]>([]);
  const [accountId,setAccountId]=useState('');
  const [work,setWork]=useState<Work[]>([]);
@@ -37,7 +39,7 @@ export default function ServiceAccounts(){
 
  async function refreshAccounts(){
   const data=await api(base);
-  setAccounts(data.accounts);
+  setAccounts(data.accounts);setAccountsReady(true);
  }
  async function refreshWork(){
   const data=await api(path);
@@ -102,11 +104,23 @@ export default function ServiceAccounts(){
  return <div className="service-accounts">
   {error&&<p className="error" role="alert">{error}</p>}
   {message&&<p className="notice" role="status">{message}</p>}
-  <section className="panel form">
-   <div className="form-grid"><label>Service account<select value={accountId} onChange={event=>choose(event.target.value)} disabled={busy}>
+  <section className="panel form service-picker">
+   <div className="service-picker-heading">
+    <span className="service-picker-icon"><Building2 size={22} aria-hidden="true"/></span>
+    <div><h2>Service account</h2><p>{account?account.name:'Choose who you’re recording work for.'}</p></div>
+    <button type="button" className={newAccount?'button':'button yellow'} disabled={busy} aria-expanded={newAccount} onClick={()=>setNewAccount(!newAccount)}>
+     {!newAccount&&<Plus size={17} aria-hidden="true"/>}{newAccount?'Cancel':'Add service account'}
+    </button>
+   </div>
+   {accounts.length>0&&<label className="service-picker-select">Account<select value={accountId} onChange={event=>choose(event.target.value)} disabled={busy}>
     <option value="">Choose an account</option>{accounts.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}
-   </select></label><div><button type="button" className="button" disabled={busy} onClick={()=>setNewAccount(!newAccount)}>{newAccount?'Cancel':'Add service account'}</button></div></div>
-   {newAccount&&<form onSubmit={addAccount}>
+   </select></label>}
+   {!accountsReady&&!error&&<p role="status">Loading service accounts…</p>}
+   {accountsReady&&!accounts.length&&!newAccount&&<div className="service-picker-empty">
+    <strong>No service accounts yet</strong><p>Add a school or organisation to start logging visits and billable work.</p>
+   </div>}
+   {newAccount&&<form className="service-account-form" onSubmit={addAccount}>
+    <h3>New service account</h3>
     <label>School or organisation name<input name="name" required maxLength={100}/></label>
     <div className="form-grid"><label>Phone<input name="phone" type="tel" maxLength={40}/></label><label>Billing address<input name="address" maxLength={200}/></label></div>
     <button className="button yellow" disabled={busy}>Save account</button>
@@ -122,7 +136,7 @@ export default function ServiceAccounts(){
     <button className="button yellow" disabled={busy}>Save work</button>
    </form>
    <section className="panel form">
-    <div className="section-heading"><h2>Work log</h2><strong>Unbilled total {total(unbilled)}</strong></div>
+    <div className="section-heading"><h2>Work log</h2><strong className="service-unbilled"><span>Unbilled total</span>{total(unbilled)}</strong></div>
     <div className="form-grid"><label>From<input type="date" value={from} onChange={event=>{setFrom(event.target.value);setPreview('');}}/></label><label>To<input type="date" value={to} onChange={event=>{setTo(event.target.value);setPreview('');}}/></label></div>
     <div className="actions">
      <button type="button" className="button" disabled={busy||!available.length} onClick={()=>{setSelection(available.slice(0,40).map(row=>row.id));setPreview('');}}>Select up to 40 unbilled jobs</button>

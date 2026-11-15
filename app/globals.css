@@ -303,3 +303,18 @@ footer.site-footer{background-color:#103c40;background-image:linear-gradient(90d
  .enquiry-summary-status { gap: 4px; text-align: right; }
  .enquiry-contact { grid-template-columns: 1fr; }
 }
+
+.service-accounts { display: grid; gap: 18px; max-width: 1080px; }
+.service-accounts .service-picker { padding: clamp(16px, 3vw, 25px); }
+.service-picker-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.service-picker-heading h2, .service-picker-heading p, .service-picker-empty p { margin: 0; }
+.service-picker-heading p, .service-picker-empty p { margin-top: 4px; color: #526975; font-size: .88rem; }
+.service-picker-heading > div { flex: 1 1 190px; min-width: 0; overflow-wrap: anywhere; }
+.service-picker-icon { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 12px; background: #e5f4f1; color: #14605a; }
+.service-picker-heading > .button { display: inline-flex; align-items: center; gap: 7px; }
+.service-picker .service-picker-select { max-width: 480px; margin: 18px 0 0; }
+.service-picker-empty { margin-top: 18px; padding: 15px; border: 1px dashed #bfd8d2; border-radius: 9px; background: #f5faf8; }
+.service-account-form { margin-top: 18px; padding-top: 16px; border-top: 1px solid #dce7e9; }
+.service-account-form h3 { margin: 0 0 12px; }
+.service-unbilled { display: grid; gap: 3px; padding: 8px 12px; border-radius: 8px; color: #155f53; background: #e5f4f1; }
+.service-unbilled span { font-size: .75rem; }
