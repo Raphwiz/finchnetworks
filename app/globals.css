@@ -279,3 +279,8 @@ footer.site-footer{background-color:#103c40;background-image:linear-gradient(90d
 .payment-settings .payment-confirm input { width: 17px; height: 17px; flex: none; margin: 2px 0 0; accent-color: #14605a; }
 .payment-register { border-top: 1px solid #dce7e9; margin-top: 24px; padding-top: 20px; }
 .payment-register h3 { margin: 0 0 14px; }
+
+.inline-stock { margin-left: 0; }
+.inline-stock label { display: grid; gap: 3px; font-size: .75rem; }
+.inline-stock input { width: 84px; }
+.inline-stock .button { align-self: end; }
