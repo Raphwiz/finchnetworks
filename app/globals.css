@@ -323,3 +323,25 @@ footer.site-footer{background-color:#103c40;background-image:linear-gradient(90d
 .service-picker-controls .service-picker-select { flex: 1 1 250px; margin: 0; }
 .service-picker .service-log-link { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #b9d0d0; color: #145754; background: #fff; }
 #service-work-log { scroll-margin-top: 90px; }
+
+.admin-workspace .admin-order { padding: 0; overflow: hidden; }
+.admin-order > summary { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 15px 20px; cursor: pointer; list-style: none; }
+.admin-order > summary::-webkit-details-marker { display: none; }
+.admin-order > summary:hover, .admin-order[open] > summary { background: #f1f8f6; }
+.admin-order > summary:focus-visible { outline: 2px solid #08796d; outline-offset: -3px; }
+.admin-order-identity { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
+.admin-order-identity > span { color: #526975; font-size: .84rem; }
+.admin-order-meta, .admin-order-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.admin-order-meta { justify-content: flex-end; }
+.admin-order-status { padding: 4px 9px; border-radius: 6px; background: #edf3f6; color: #365866; font-size: .75rem; font-weight: 700; text-transform: capitalize; }
+.admin-order-status[data-status="accepted"] { background: #fff3d5; color: #73531b; }
+.admin-order-status[data-status="paid"], .admin-order-status[data-status="completed"] { background: #e0f2e9; color: #176246; }
+.admin-order-chevron { font-size: 1.25rem; line-height: 1; }
+.admin-order[open] .admin-order-chevron { transform: rotate(180deg); }
+.admin-order-body { border-top: 1px solid #dce7e9; padding: 16px 20px; display: grid; gap: 16px; }
+.admin-order-contact { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 0; }
+.admin-order-contact dt { font-size: .75rem; color: #526975; }
+.admin-order-contact dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+.admin-order-items h3, .admin-order-note p { margin: 0; }
+.admin-order-note { padding: 10px 12px; border-radius: 8px; background: #f4f7f8; }
+.admin-order-actions { padding-top: 12px; border-top: 1px solid #dce7e9; }
