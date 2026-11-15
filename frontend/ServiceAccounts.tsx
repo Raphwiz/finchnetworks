@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect,useState} from 'react';
-import {Building2,Plus} from 'lucide-react';
+import {ArrowDown,Building2,Plus} from 'lucide-react';
 import {api} from './api';
 import {money} from '@/shared/models';
 
@@ -112,9 +112,9 @@ export default function ServiceAccounts(){
      {!newAccount&&<Plus size={17} aria-hidden="true"/>}{newAccount?'Cancel':'Add service account'}
     </button>
    </div>
-   {accounts.length>0&&<label className="service-picker-select">Account<select value={accountId} onChange={event=>choose(event.target.value)} disabled={busy}>
+   {accounts.length>0&&<div className="service-picker-controls"><label className="service-picker-select">Account<select value={accountId} onChange={event=>choose(event.target.value)} disabled={busy}>
     <option value="">Choose an account</option>{accounts.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}
-   </select></label>}
+   </select></label>{account&&<a className="button service-log-link" href="#service-work-log">Find work log <ArrowDown size={16} aria-hidden="true"/></a>}</div>}
    {!accountsReady&&!error&&<p role="status">Loading service accounts…</p>}
    {accountsReady&&!accounts.length&&!newAccount&&<div className="service-picker-empty">
     <strong>No service accounts yet</strong><p>Add a school or organisation to start logging visits and billable work.</p>
@@ -135,8 +135,8 @@ export default function ServiceAccounts(){
      <label>Materials (KES)<input name="materials" type="number" min="0" step="0.01" defaultValue="0" required/></label></div>
     <button className="button yellow" disabled={busy}>Save work</button>
    </form>
-   <section className="panel form">
-    <div className="section-heading"><h2>Work log</h2><strong className="service-unbilled"><span>Unbilled total</span>{total(unbilled)}</strong></div>
+   <section id="service-work-log" className="panel form" tabIndex={-1} aria-labelledby="service-work-log-title">
+    <div className="section-heading"><h2 id="service-work-log-title">Work log</h2><strong className="service-unbilled"><span>Unbilled total</span>{total(unbilled)}</strong></div>
     <div className="form-grid"><label>From<input type="date" value={from} onChange={event=>{setFrom(event.target.value);setPreview('');}}/></label><label>To<input type="date" value={to} onChange={event=>{setTo(event.target.value);setPreview('');}}/></label></div>
     <div className="actions">
      <button type="button" className="button" disabled={busy||!available.length} onClick={()=>{setSelection(available.slice(0,40).map(row=>row.id));setPreview('');}}>Select up to 40 unbilled jobs</button>
