@@ -284,3 +284,22 @@ footer.site-footer{background-color:#103c40;background-image:linear-gradient(90d
 .inline-stock label { display: grid; gap: 3px; font-size: .75rem; }
 .inline-stock input { width: 84px; }
 .inline-stock .button { align-self: end; }
+
+.enquiry-card > summary { cursor: pointer; list-style: none; padding: 16px 20px; flex-direction: row; align-items: center; }
+.enquiry-card > summary::-webkit-details-marker { display: none; }
+.enquiry-card > summary:hover { background: #eaf5f0; }
+.enquiry-card > summary:focus-visible { outline: 2px solid #08796d; outline-offset: -4px; }
+.enquiry-card:not([open]) > summary { border-bottom: 0; }
+.enquiry-heading { display: grid; justify-items: start; gap: 5px; min-width: 0; }
+.enquiry-customer { color: #143d49; font-size: 1.05rem; overflow-wrap: anywhere; }
+.enquiry-summary-status { display: flex; gap: 10px; align-items: center; color: #155f53; font-size: .8rem; font-weight: 700; }
+.enquiry-summary-status span { background: #e1f0ea; padding: 5px 9px; border-radius: 6px; }
+.enquiry-summary-status svg { flex: none; }
+.enquiry-card[open] .enquiry-summary-status svg { transform: rotate(180deg); }
+.enquiry-card h4.enquiry-section-title { margin: 18px 24px 0; font-size: .95rem; }
+.enquiry-card .enquiry-actions { border-bottom: 1px solid #e0eae4; }
+@media (max-width: 480px) {
+ .enquiry-card > summary { padding: 14px; gap: 10px; }
+ .enquiry-summary-status { gap: 4px; text-align: right; }
+ .enquiry-contact { grid-template-columns: 1fr; }
+}
