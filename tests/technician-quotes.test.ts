@@ -2,7 +2,26 @@ import './receipts.test';
 import assert from 'node:assert/strict';
 import {database} from '../backend/database';
 import {commerceHandle} from '../backend/commerce';
+import {defaultQuoteTerms} from '../shared/commerce';
 const db=database();const send=(path:string,body?:any,token='b'.repeat(64))=>commerceHandle(new Request('https://finch.test/api/commerce/'+path,{method:body?'POST':'GET',headers:{cookie:'finch_customer='+token,origin:'https://finch.test','content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})}));
+
+for (const paymentMode of ['deposit', 'full'] as const) {
+  const response = await send('admin/quote', {
+    name: 'Test client', phone: '0700000000', expires: '2099-01-01',
+    lines: [{name: 'Installation', quantity: 1, unitPrice: 5000}],
+    terms: defaultQuoteTerms, paymentMode, status: 'quoted',
+  }, 'a'.repeat(64));
+  assert.equal(response?.status, 200);
+  const quote = await response!.json();
+  assert.equal(quote.deposit, paymentMode === 'deposit' ? 4000 : 0);
+  assert.equal(quote.terms.includes('full quotation amount is due'), paymentMode === 'full');
+  const accepted = await send('accept', {
+    id: quote.id, revision: quote.revision, name: 'Test client', accept: true,
+  });
+  assert.equal(accepted?.status, 200);
+  const customerQuote = await (await send('quote/' + quote.id))!.json();
+  assert.equal(customerQuote.amountDue, paymentMode === 'deposit' ? 4000 : 5000);
+}
 assert.equal((await send('technician'))!.status,403);
 await db.prepare('INSERT INTO technician_users VALUES (?)').bind('test-customer').run();
 const payload={name:'Test client',phone:'0700000000',location:'Test',project:'Test',lines:[{name:'Equipment',quantity:2,unitPrice:100},{name:'Installation labour',labour:true,quantity:7,unitPrice:4500}],deposit:0,expires:'2099-01-01',terms:'Test terms',status:'quoted'};
