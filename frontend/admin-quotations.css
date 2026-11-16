@@ -1,0 +1,17 @@
+.admin-workspace .admin-quote-row { position: relative; padding: 0; }
+.admin-quote-list { gap: 8px; }
+.admin-quote-details > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 64px; gap: 8px 16px; padding: 10px 112px 10px 16px;
+  cursor: pointer; list-style: none; border-radius: inherit;
+}
+.admin-quote-details > summary::-webkit-details-marker { display: none; }
+.admin-quote-details > summary:hover, .admin-quote-details[open] > summary { background: #f1f8f6; }
+.admin-quote-details > summary:focus-visible { outline: 2px solid #08796d; outline-offset: -2px; }
+.admin-quote-details[open] .admin-order-chevron { transform: rotate(180deg); }
+.admin-quote-row .admin-quote-manage { position: absolute; top: 11px; right: 12px; }
+.admin-quote-row .admin-order-body > p { margin: 0; }
+@media (max-width: 560px) {
+  .admin-quote-details > summary { flex-wrap: wrap; justify-content: flex-start; padding-right: 100px; }
+  .admin-quote-details .admin-order-meta { justify-content: flex-start; gap: 8px; }
+}
