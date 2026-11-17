@@ -1,3 +1,4 @@
+import {addConfidentialWatermark} from './pdf-watermark';
 import {drawLetterhead} from './letterhead';
 import {PDFDocument,StandardFonts,rgb} from 'pdf-lib';
 import {readFile} from 'node:fs/promises';
@@ -67,5 +68,6 @@ async function createDocumentPdf(d:(ReceiptData|InvoiceData)&DocumentMetadata){
  totals.forEach(([label,value])=>{const total=label==='GRAND TOTAL'||label==='AMOUNT DUE';page.drawRectangle({x:tx,y:y-7,width:tw,height:19,color:total?blue:pale});text(label,tx+6,y,9,true,total?white:navy);const s=cash(value);text(s,right-6-bold.widthOfTextAtSize(s,9),y,9,true,total?white:navy);y-=19;});y=top-blockHeight-16;
  need(130);text('Company Stamp',419,y,9,true);const size=stamp.scaleToFit(104,80);if(!d.voidReason)page.drawImage(stamp,{x:419,y:y-90,...size});text('Prepared / Authorized By',left,y,10,true);text('Name: RAPHAEL GIKUNDI',left,y-20,9);text('Signature: Electronically signed by FINCH NETWORKS LTD',left,y-39,8);text('Date: '+d.date.split('-').reverse().join('/'),left,y-58,9);y-=112;
  for(const [message,size] of [['Thank you for choosing Finch Networks Ltd.',10],[invoice?'':'This receipt confirms payment for the goods/services listed above. Keep it for warranty and reference purposes.',8]] as const){if(!message)continue;for(const line of wrap(message,width,size)){need(size+5);text(line,left+(width-regular.widthOfTextAtSize(line,size))/2,y,size);y-=size+4;}y-=5;}
- pdf.getPages().forEach((p,i)=>{p.drawLine({start:{x:left,y:43},end:{x:right,y:43},color:gold,thickness:1});const footer=clean(`${d.reference}  |  Finch Networks Ltd  |  Page ${i+1} of ${pdf.getPageCount()}`);p.drawText(footer,{x:left+(width-regular.widthOfTextAtSize(footer,8))/2,y:28,size:8,font:regular,color:navy});});pdf.setTitle(d.reference);pdf.setAuthor('Finch Networks Ltd');return pdf.save();
+ pdf.getPages().forEach((p,i)=>{p.drawLine({start:{x:left,y:43},end:{x:right,y:43},color:gold,thickness:1});const footer=clean(`${d.reference}  |  Finch Networks Ltd  |  Page ${i+1} of ${pdf.getPageCount()}`);p.drawText(footer,{x:left+(width-regular.widthOfTextAtSize(footer,8))/2,y:28,size:8,font:regular,color:navy});});pdf.setTitle(d.reference);pdf.setAuthor('Finch Networks Ltd');addConfidentialWatermark(pdf,bold,logo);
+ return pdf.save();
 }
