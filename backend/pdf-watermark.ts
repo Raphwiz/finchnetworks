@@ -13,7 +13,7 @@ export function addConfidentialWatermark(pdf:PDFDocument,font:PDFFont,logo:PDFIm
   }
   page.drawText(label,{
    x:(width-labelWidth)/2,y:height*.455,size:fontSize,font,
-   color:rgb(.08,.32,.32),opacity:.17,
+   color:rgb(.08,.32,.32),opacity:.065,
   });
  }
 }
