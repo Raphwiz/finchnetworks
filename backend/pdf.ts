@@ -87,6 +87,19 @@ inspectionNotes(title:string,body:string,numbered=false){
  });
  this.y-=9;
 }
+inspectionSignature(stamp:PDFImage,date:string){
+ this.gap(186);
+ const top=this.y;
+ const stampSize=stamp.scaleToFit(92,65);
+ const stampX=right-112;
+ this.ruleLine();
+ this.text('Prepared by Finch Networks Limited',{size:10,font:this.bold,gap:4});
+ this.text('Signed electronically by Finch Networks Limited.',{size:9,gap:3});
+ this.text(`Date: ${date}`,{size:9,gap:0});
+ this.page.drawText('Company stamp',{x:stampX,y:top-14,size:9,font:this.bold,color:ink});
+ this.page.drawImage(stamp,{...stampSize,x:stampX,y:top-22-stampSize.height});
+ this.y=top-98;
+}
 inspectionClosing(){
  const message='We appreciate the opportunity to assess your CCTV system. If you would like to discuss the findings or prioritise the recommended work, we will be happy to help.';
  const lines=wrap(message,this.font,10,width-28);
@@ -114,10 +127,12 @@ type CctvReport = {
 
 export async function createCctvReportPdf(report:CctvReport,settings?:Partial<Brand>){
  const sheet=await open(brandOf(settings),true);
+ const issueDate=longDate(report.issuedAt??Date.now());
+ const stamp=await sheet.pdf.embedPng(await readFile(join(process.cwd(),'seed/receipt-stamp.png')));
  sheet.pdf.setTitle('CCTV Site Assessment | Finch Networks Ltd');
  sheet.addPage();
  sheet.text('CCTV SITE ASSESSMENT',{size:18,font:sheet.bold,color:teal,gap:10});
- sheet.meta([['Inspected on',longDate(report.inspectionDate)],['Issued on',longDate(report.issuedAt??Date.now())],
+ sheet.meta([['Inspected on',longDate(report.inspectionDate)],['Issued on',issueDate],
   ['Customer',report.customer],['Site',report.site],['Inspected by',report.technician]]);
  sheet.ruleLine();
  report.cameraSetups?.forEach((setup,index)=>sheet.inspectionTable(`Camera setup ${index+1}`,[
@@ -129,6 +144,7 @@ export async function createCctvReportPdf(report:CctvReport,settings?:Partial<Br
  sheet.inspectionNotes('Additional equipment and coverage notes',report.equipment);
  sheet.inspectionNotes('Inspection findings',report.condition);
  sheet.inspectionNotes('Recommended actions',report.recommendations,true);
+ sheet.inspectionSignature(stamp,issueDate);
  sheet.inspectionClosing();
  return sheet.save();
 }
