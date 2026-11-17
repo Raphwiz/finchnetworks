@@ -1,3 +1,4 @@
+import {parseCameraSetups} from '@/shared/cctv-report';
 import {serviceAccountsHandle} from './service-accounts';
 import {defaultQuoteTerms} from '@/shared/commerce';
 import {receiptsHandle} from './receipts';
@@ -53,10 +54,11 @@ if(path==='admin/cctv-report'){
  }
  const report={
   inspectionDate,customer:str(body.customer,120),site:str(body.site,200),technician:str(body.technician,120),
-  equipment:str(body.equipment,2200),condition:str(body.condition,2200),recommendations:str(body.recommendations,2200),
+  cameraSetups:parseCameraSetups(body.cameraSetups),
+  equipment:str(body.equipment??'',2200),condition:str(body.condition??'',2200),recommendations:str(body.recommendations??'',2200),
  };
- if(!report.customer||!report.site||!report.technician||!report.equipment||!report.condition){
-  throw new Error('Enter the customer, site, technician, equipment and findings.');
+ if(!report.customer||!report.site||!report.technician||(!report.cameraSetups.length&&(!report.equipment||!report.condition))){
+  throw new Error('Enter the customer, site, technician and camera setup.');
  }
  return pdfResponse(await createCctvReportPdf(report,await settings()),`Finch-CCTV-Report-${inspectionDate}.pdf`);
 }

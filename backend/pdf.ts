@@ -1,3 +1,4 @@
+import type {CameraSetup} from '@/shared/cctv-report';
 import {addConfidentialWatermark} from './pdf-watermark';
 import {drawLetterhead} from './letterhead';
 import {readFile} from 'node:fs/promises';
@@ -47,6 +48,21 @@ ruleLine(){this.gap(12);this.page.drawLine({start:{x:left,y:this.y},end:{x:right
 heading(title:string){this.gap(28);this.page.drawRectangle({x:left,y:this.y-4,width:4,height:16,color:gold});this.page.drawText(clean(title),{x:left+12,y:this.y,size:12,font:this.bold,color:teal});this.y-=22;}
 meta(rows:[string,string][]){const labelWidth=92;for(const [label,value] of rows){if(!clean(value))continue;const lines=wrap(value,this.font,10,width-labelWidth);this.gap(lines.length*13+6);this.page.drawText(clean(label).toUpperCase(),{x:left,y:this.y,size:8,font:this.bold,color:muted});lines.forEach((line,index)=>this.page.drawText(line,{x:left+labelWidth,y:this.y-index*13,size:10,font:this.font,color:ink}));this.y-=lines.length*13+6;}}
 table(items:Item[],totalLabel:string,total:number|null){const columns=[28,247,46,92,102];const headers=['No','Item description','Qty','Unit price','Total'];const drawHeader=()=>{this.gap(26);this.page.drawRectangle({x:left,y:this.y-8,width,height:22,color:teal});let x=left;headers.forEach((header,index)=>{this.page.drawText(header,{x:x+4,y:this.y-1,size:8,font:this.bold,color:white});x+=columns[index];});this.y-=24;};drawHeader();items.forEach((item,index)=>{const name=wrap(item.name||'Item',this.font,9,columns[1]-10);const height=Math.max(22,name.length*12+8);if(this.y-height<52){this.addPage();drawHeader();}if(index%2===0)this.page.drawRectangle({x:left,y:this.y-height+14,width,height,color:wash});let x=left;const cells=[String(index+1),'',item.labour?'Service':String(item.quantity),item.unitPrice==null?'To confirm':kes(item.unitPrice),item.total==null?'To confirm':kes(item.total)];cells.forEach((cell,cellIndex)=>{if(cellIndex!==1)this.page.drawText(cell,{x:x+4,y:this.y,size:9,font:cellIndex===0?this.bold:this.font,color:ink});x+=columns[cellIndex];});name.forEach((line,lineIndex)=>this.page.drawText(line,{x:left+columns[0]+4,y:this.y-lineIndex*12,size:9,font:this.font,color:ink}));this.y-=height;});this.gap(32);this.page.drawRectangle({x:left,y:this.y-8,width,height:26,color:rgb(1,0.98,0.9)});this.page.drawText(totalLabel,{x:left+8,y:this.y,size:10,font:this.bold,color:ink});const amount=total==null?'To confirm':kes(total);this.page.drawText(amount,{x:right-8-this.bold.widthOfTextAtSize(amount,11),y:this.y,size:11,font:this.bold,color:teal});this.y-=28;}
+inspectionTable(title:string,rows:[string,string][]){
+ const labelWidth=130;
+ const prepared=rows.map(([label,value])=>({label,lines:wrap(value||'Not recorded',this.font,9,width-labelWidth-16)}));
+ this.gap(34+prepared.reduce((height,row)=>height+row.lines.length*12+9,0));
+ this.heading(title);
+ for(const {label,lines} of prepared){
+  const height=lines.length*12+9;
+  this.page.drawRectangle({x:left,y:this.y-height,width,height,borderColor:rule,borderWidth:.5});
+  this.page.drawRectangle({x:left,y:this.y-height,width:labelWidth,height,color:wash,borderColor:rule,borderWidth:.5});
+  this.page.drawText(label,{x:left+8,y:this.y-13,size:9,font:this.bold,color:ink});
+  lines.forEach((line,index)=>this.page.drawText(line,{x:left+labelWidth+8,y:this.y-13-index*12,size:9,font:this.font,color:ink}));
+  this.y-=height;
+ }
+ this.y-=12;
+}
 sections(blocks:Section[]){for(const block of blocks){const body=clean(block.body);if(!body)continue;this.heading(block.title);for(const paragraph of body.split('\n').map(line=>line.trim()).filter(Boolean))this.text(block.bullets&&!paragraph.startsWith('-')?`- ${paragraph}`:paragraph,{size:10,gap:2});this.y-=6;}}
 finish(){const pages=this.pdf.getPages();pages.forEach((page,index)=>{page.drawRectangle({x:0,y:0,width:pageWidth,height:8,color:gold});const label=clean(`Finch Networks Ltd  ·  Secure. Connect. Empower.  ·  Page ${index+1} of ${pages.length}`);page.drawText(label,{x:(page.getWidth()-this.font.widthOfTextAtSize(label,8))/2,y:24,size:8,font:this.font,color:muted});});}
 async save(){this.finish();addConfidentialWatermark(this.pdf,this.bold,this.logo);return this.pdf.save();}
@@ -58,7 +74,7 @@ function brandOf(settings?:Partial<Brand>):Brand{return {phone:clean(settings?.p
 
 type CctvReport = {
  inspectionDate:string; customer:string; site:string; technician:string;
- equipment:string; condition:string; recommendations:string;
+ equipment:string; condition:string; recommendations:string; cameraSetups?:CameraSetup[];
 };
 
 export async function createCctvReportPdf(report:CctvReport,settings?:Partial<Brand>){
@@ -69,8 +85,13 @@ export async function createCctvReportPdf(report:CctvReport,settings?:Partial<Br
  sheet.meta([['Inspected on',longDate(report.inspectionDate)],['Issued on',longDate(Date.now())],
   ['Customer',report.customer],['Site',report.site],['Inspected by',report.technician]]);
  sheet.ruleLine();
+ report.cameraSetups?.forEach((setup,index)=>sheet.inspectionTable(`Camera setup ${index+1}`,[
+  ['Camera brand',setup.brand],['Camera model',setup.model],['Camera type',setup.type],
+  ['Wiring status',setup.wiring],['Recorder type',setup.recorder],
+  ['Recorder condition',setup.recorderCondition],['Hard drive status',setup.storage],
+ ]));
  for(const [title,body] of [
-  ['Existing equipment and coverage',report.equipment],
+  ['Additional equipment and coverage notes',report.equipment],
   ['Condition and findings',report.condition],
   ['Recommendations',report.recommendations],
  ]){
