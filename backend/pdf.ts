@@ -55,6 +55,34 @@ async function open(brand:Brand,whiteLetterhead=false){const pdf=await PDFDocume
 
 function brandOf(settings?:Partial<Brand>):Brand{return {phone:clean(settings?.phone)||'+254 707 625129',email:clean(settings?.email)||'finchnetworkslimited@gmail.com',area:clean(settings?.area)||'Kenya'};}
 
+type CctvReport = {
+ inspectionDate:string; customer:string; site:string; technician:string;
+ equipment:string; condition:string; recommendations:string;
+};
+
+export async function createCctvReportPdf(report:CctvReport,settings?:Partial<Brand>){
+ const sheet=await open(brandOf(settings),true);
+ sheet.pdf.setTitle('CCTV Site Assessment | Finch Networks Ltd');
+ sheet.addPage();
+ sheet.text('CCTV SITE ASSESSMENT',{size:18,font:sheet.bold,color:teal,gap:10});
+ sheet.meta([['Inspected on',longDate(report.inspectionDate)],['Issued on',longDate(Date.now())],
+  ['Customer',report.customer],['Site',report.site],['Inspected by',report.technician]]);
+ sheet.ruleLine();
+ for(const [title,body] of [
+  ['Existing equipment and coverage',report.equipment],
+  ['Condition and findings',report.condition],
+  ['Recommendations',report.recommendations],
+ ]){
+  if(!body)continue;
+  sheet.heading(title);
+  for(const paragraph of clean(body).split('\n')){
+   for(const line of wrap(paragraph,sheet.font,10,width))sheet.text(line,{gap:0});
+  }
+  sheet.y-=10;
+ }
+ return sheet.save();
+}
+
 export async function createEstimatePdf(data:EstimatePdfInput,settings?:Partial<Brand>){const sheet=await open(brandOf(settings),true);sheet.addPage();sheet.text('ESTIMATE',{size:18,font:sheet.bold,color:teal,gap:2});sheet.text('Not a final quotation. Finch confirms delivery, installation and the total before you pay.',{size:9,color:muted,gap:10});sheet.meta([['Reference',data.reference||'Not yet submitted'],['Date',longDate(data.createdAt||Date.now())],['Client',data.name||'Customer'],['Phone',data.phone||''],['Location',data.location||'']]);sheet.ruleLine();if(data.cctvSummary)sheet.text(data.cctvSummary,{gap:8});if(data.planSummary)sheet.text(data.planSummary,{gap:8});sheet.table(data.calculation.lines,data.calculation.hasUnpriced?'Priced items subtotal':'Estimate subtotal',data.calculation.subtotal);const notes=[data.calculation.note||'Prices, installation and site requirements will be confirmed by Finch.',data.calculation.hasUnpriced?'Some items still need a price. This is not a final total.':'',data.notes?`Project details: ${data.notes}`:''].filter(Boolean);sheet.sections([{title:'Before this becomes a quotation',body:notes.join('\n')}]);return sheet.save();}
 
 export async function createQuotationPdf(quote:QuotePdfInput,settings?:Partial<Brand>){const brand=brandOf(settings);const sheet=await open(brand,true);const project=clean(quote.project);const date=longDate(quote.createdAt||Date.now());const deposit=Number(quote.deposit)||0;const balance=Math.round((Number(quote.total)-deposit)*100)/100;

@@ -11,7 +11,7 @@ import {database,media} from './database';
 import {products,projects,settings} from './catalog';
 import {calculate} from './pricing';
 import {isAdmin} from './auth';
-import {createEstimatePdf,pdfResponse} from './pdf';
+import {createCctvReportPdf,createEstimatePdf,pdfResponse} from './pdf';
 import {alertStaff,staffAlertsEnabled} from './staff-alert';
 import {notifyCustomer} from './customer-notify';
 import {categories} from '@/shared/models';
@@ -45,6 +45,21 @@ if(path==='admin/upload'&&req.method==='POST'){if(Number(req.headers.get('conten
 if(req.method!=='POST')return json({error:'Not found'},404);
 if(path!=='repairs'&&Number(req.headers.get('content-length'))>100000)return json({error:'Request too large'},413);
 const repair=path==='repairs'?await repairBody(req):null;const body=(repair?repair.body:await req.json()) as Record<string,any>; if(!body||typeof body!=='object'||Array.isArray(body))throw new Error('Invalid request.');
+if(path==='admin/cctv-report'){
+ const inspectionDate=str(body.inspectionDate,10);
+ const date=new Date(`${inspectionDate}T12:00:00Z`);
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(inspectionDate)||!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==inspectionDate){
+  throw new Error('Enter a valid inspection date.');
+ }
+ const report={
+  inspectionDate,customer:str(body.customer,120),site:str(body.site,200),technician:str(body.technician,120),
+  equipment:str(body.equipment,2200),condition:str(body.condition,2200),recommendations:str(body.recommendations,2200),
+ };
+ if(!report.customer||!report.site||!report.technician||!report.equipment||!report.condition){
+  throw new Error('Enter the customer, site, technician, equipment and findings.');
+ }
+ return pdfResponse(await createCctvReportPdf(report,await settings()),`Finch-CCTV-Report-${inspectionDate}.pdf`);
+}
 if(path==='estimate/preview'){const clip=(v:unknown,max:number)=>typeof v==='string'?v.trim().slice(0,max):'';const now=Date.now();const ip=req.headers.get('x-finch-client-ip')||'local';const hits=(previewHits.get(ip)||[]).filter(t=>now-t<600000);if(hits.length>=20)return json({error:'Please wait a few minutes before downloading another estimate.'},429);hits.push(now);previewHits.set(ip,hits);const plan=body.plan?validatePlan(body.plan):null;const catalog=await products();const cctv=body.cctv?buildCctv(body.cctv,catalog):null;const calculation=cctv?cctv.calculation:calculate(plan?[{id:`service-${planDefinitions[plan.service].index}`,quantity:1}]:body.items,catalog);if(!calculation.lines.length)throw new Error('Add an item before downloading an estimate.');const pdf=await createEstimatePdf({name:clip(body.name,100),phone:clip(body.phone,40),location:clip(body.location,200),notes:clip(body.notes,3000),calculation,...(cctv?{cctvSummary:cctv.summary}:{}),...(plan?{planSummary:planSummary(plan)}:{}),createdAt:now},await settings());return body.format==='base64'?json({pdf:Buffer.from(pdf).toString('base64')}):pdfResponse(pdf,'Finch-estimate.pdf');}
 if(path==='plan'){const plan=validatePlan(body.plan);const calculation=calculate([{id:`service-${planDefinitions[plan.service].index}`,quantity:1}],await products());return json({plan,summary:planSummary(plan),calculation});}
 if(path==='cctv')return json(buildCctv(body.config,await products()));
