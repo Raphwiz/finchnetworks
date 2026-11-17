@@ -63,6 +63,41 @@ inspectionTable(title:string,rows:[string,string][]){
  }
  this.y-=12;
 }
+inspectionNotes(title:string,body:string,numbered=false){
+ const items=clean(body).split('\n').map(line=>line.trim().replace(/^(?:[-*]|\d+[.)])\s+/,'')).filter(Boolean);
+ if(!items.length)return;
+ this.gap(48);
+ this.heading(title);
+ items.forEach((item,index)=>{
+  const heading=numbered?item.match(/^\*\*(.+?)\*\*\s*[-:]?\s*(.*)$/)??item.match(/^([^:]{1,75}):\s+(.+)$/):null;
+  const indent=numbered?29:16;
+  this.gap(heading?36:19);
+  if(numbered){
+   this.page.drawRectangle({x:left,y:this.y-4,width:20,height:18,color:wash,borderColor:rule,borderWidth:.5});
+   const number=String(index+1);
+   this.page.drawText(number,{x:left+(20-this.bold.widthOfTextAtSize(number,9))/2,y:this.y+1,size:9,font:this.bold,color:teal});
+  }else{
+   this.page.drawCircle({x:left+5,y:this.y+3,size:1.8,color:teal});
+  }
+  if(heading)this.text(heading[1],{indent,font:this.bold,gap:2});
+  for(const line of wrap(heading?heading[2]:item,this.font,10,width-indent)){
+   if(line)this.text(line,{indent,gap:1});
+  }
+  this.y-=numbered?7:4;
+ });
+ this.y-=9;
+}
+inspectionClosing(){
+ const message='We appreciate the opportunity to assess your CCTV system. If you would like to discuss the findings or prioritise the recommended work, we will be happy to help.';
+ const lines=wrap(message,this.font,10,width-28);
+ const height=42+lines.length*14;
+ this.gap(height+14);
+ this.page.drawRectangle({x:left,y:this.y-height,width,height,color:wash,borderColor:rule,borderWidth:.6});
+ this.y-=20;
+ this.text('Thank you for trusting Finch Networks Limited.',{indent:14,size:11,font:this.bold,color:teal,gap:4,max:width-28});
+ for(const line of lines)this.text(line,{indent:14,gap:1,max:width-28});
+ this.y-=8;
+}
 sections(blocks:Section[]){for(const block of blocks){const body=clean(block.body);if(!body)continue;this.heading(block.title);for(const paragraph of body.split('\n').map(line=>line.trim()).filter(Boolean))this.text(block.bullets&&!paragraph.startsWith('-')?`- ${paragraph}`:paragraph,{size:10,gap:2});this.y-=6;}}
 finish(){const pages=this.pdf.getPages();pages.forEach((page,index)=>{page.drawRectangle({x:0,y:0,width:pageWidth,height:8,color:gold});const label=clean(`Finch Networks Ltd  ·  Secure. Connect. Empower.  ·  Page ${index+1} of ${pages.length}`);page.drawText(label,{x:(page.getWidth()-this.font.widthOfTextAtSize(label,8))/2,y:24,size:8,font:this.font,color:muted});});}
 async save(){this.finish();addConfidentialWatermark(this.pdf,this.bold,this.logo);return this.pdf.save();}
@@ -74,7 +109,7 @@ function brandOf(settings?:Partial<Brand>):Brand{return {phone:clean(settings?.p
 
 type CctvReport = {
  inspectionDate:string; customer:string; site:string; technician:string;
- equipment:string; condition:string; recommendations:string; cameraSetups?:CameraSetup[];
+ equipment:string; condition:string; recommendations:string; cameraSetups?:CameraSetup[]; issuedAt?:number;
 };
 
 export async function createCctvReportPdf(report:CctvReport,settings?:Partial<Brand>){
@@ -82,7 +117,7 @@ export async function createCctvReportPdf(report:CctvReport,settings?:Partial<Br
  sheet.pdf.setTitle('CCTV Site Assessment | Finch Networks Ltd');
  sheet.addPage();
  sheet.text('CCTV SITE ASSESSMENT',{size:18,font:sheet.bold,color:teal,gap:10});
- sheet.meta([['Inspected on',longDate(report.inspectionDate)],['Issued on',longDate(Date.now())],
+ sheet.meta([['Inspected on',longDate(report.inspectionDate)],['Issued on',longDate(report.issuedAt??Date.now())],
   ['Customer',report.customer],['Site',report.site],['Inspected by',report.technician]]);
  sheet.ruleLine();
  report.cameraSetups?.forEach((setup,index)=>sheet.inspectionTable(`Camera setup ${index+1}`,[
@@ -90,18 +125,11 @@ export async function createCctvReportPdf(report:CctvReport,settings?:Partial<Br
   ['Wiring status',setup.wiring],['Recorder type',setup.recorder],
   ['Recorder condition',setup.recorderCondition],['Hard drive status',setup.storage],
  ]));
- for(const [title,body] of [
-  ['Additional equipment and coverage notes',report.equipment],
-  ['Condition and findings',report.condition],
-  ['Recommendations',report.recommendations],
- ]){
-  if(!body)continue;
-  sheet.heading(title);
-  for(const paragraph of clean(body).split('\n')){
-   for(const line of wrap(paragraph,sheet.font,10,width))sheet.text(line,{gap:0});
-  }
-  sheet.y-=10;
- }
+ sheet.y-=5;
+ sheet.inspectionNotes('Additional equipment and coverage notes',report.equipment);
+ sheet.inspectionNotes('Inspection findings',report.condition);
+ sheet.inspectionNotes('Recommended actions',report.recommendations,true);
+ sheet.inspectionClosing();
  return sheet.save();
 }
 

@@ -40,6 +40,18 @@ if(path==='catalog'&&req.method==='GET')return json({products:await products(),p
 if(path.startsWith('estimate/')&&req.method==='GET'&&path!=='estimate/preview'){const id=path.slice(9);if(!/^[a-f0-9-]{36}$/.test(id))return json({error:'Not found'},404);const row=await database().prepare('SELECT data FROM enquiries WHERE id=?').bind(id).first<{data:string}>();if(!row)return json({error:'Not found'},404);const data=JSON.parse(row.data);return pdfResponse(await createEstimatePdf(data,await settings()),`Finch-${data.reference||'estimate'}.pdf`);}
 if(path.startsWith('admin')){if(!await isAdmin(req))return json({error:'Administrator access is required.'},403);
 if(path.startsWith('admin/repair-photo/')&&req.method==='GET'){const key=path.slice('admin/repair-photo/'.length);if(!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))return json({error:'Not found'},404);const object=await media(true).get(key);if(!object)return json({error:'Not found'},404);return new Response(object.body,{headers:{'Content-Type':object.httpMetadata.contentType,'Cache-Control':'private,no-store','X-Content-Type-Options':'nosniff'}});}
+if(path==='admin/cctv-report'&&req.method==='GET'){
+ const {results}=await database().prepare('SELECT id, customer, site, inspection_date AS inspectionDate, issued_at AS issuedAt FROM cctv_reports ORDER BY issued_at DESC, id DESC').all();
+ return json({reports:results});
+}
+if(path.startsWith('admin/cctv-report/')&&req.method==='GET'){
+ const id=path.slice('admin/cctv-report/'.length);
+ if(!/^[a-f0-9]{64}$/.test(id))return json({error:'Report not found.'},404);
+ const row=await database().prepare('SELECT data, issued_at FROM cctv_reports WHERE id=?').bind(id).first<{data:string;issued_at:number}>();
+ if(!row)return json({error:'Report not found.'},404);
+ const {report,brand}=JSON.parse(row.data);
+ return pdfResponse(await createCctvReportPdf({...report,issuedAt:row.issued_at},brand),`Finch-CCTV-Report-${report.inspectionDate}.pdf`);
+}
 if(path==='admin'&&req.method==='GET'){const rows=await database().prepare('SELECT id,reference,data,status,created_at FROM enquiries ORDER BY created_at DESC LIMIT 200').all();return json({products:await products(true),projects:await projects(true),settings:await settings(),alertsEnabled:staffAlertsEnabled(),enquiries:rows.results.map((r:any)=>({...JSON.parse(r.data),status:r.status}))});}
 if(path==='admin/upload'&&req.method==='POST'){if(Number(req.headers.get('content-length'))>8_500_000)throw new Error('Use an image smaller than 8 MB.');const form=await req.formData();const file=form.get('file');if(!(file instanceof File)||file.size>8_000_000||file.size===0)throw new Error('Choose an image up to 8 MB.');const buffer=await file.arrayBuffer();const b=new Uint8Array(buffer);const jpg=b[0]===255&&b[1]===216&&b[2]===255;const png=b[0]===137&&b[1]===80&&b[2]===78&&b[3]===71;const webp=String.fromCharCode(...b.slice(0,4))==='RIFF'&&String.fromCharCode(...b.slice(8,12))==='WEBP';if(!jpg&&!png&&!webp)throw new Error('Upload a JPG, PNG or WebP image.');const ext=jpg?'jpg':png?'png':'webp';const key=`${crypto.randomUUID()}.${ext}`;await media().put(key,buffer,{httpMetadata:{contentType:`image/${jpg?'jpeg':ext}`}});return json({url:`/api/media/${key}`});}
 }
@@ -60,7 +72,18 @@ if(path==='admin/cctv-report'){
  if(!report.customer||!report.site||!report.technician||(!report.cameraSetups.length&&(!report.equipment||!report.condition))){
   throw new Error('Enter the customer, site, technician and camera setup.');
  }
- return pdfResponse(await createCctvReportPdf(report,await settings()),`Finch-CCTV-Report-${inspectionDate}.pdf`);
+ const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(report)));
+ const id=Buffer.from(digest).toString('hex');
+ const db=database();
+ const existing=await db.prepare('SELECT data, issued_at FROM cctv_reports WHERE id=?').bind(id).first<{data:string;issued_at:number}>();
+ const issuedAt=existing?.issued_at??Date.now();
+ const brand=existing?JSON.parse(existing.data).brand:await settings();
+ const bytes=await createCctvReportPdf({...report,issuedAt},brand);
+ if(!existing){
+  await db.prepare('INSERT INTO cctv_reports (id,customer,site,inspection_date,issued_at,data) VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING')
+   .bind(id,report.customer,report.site,inspectionDate,issuedAt,JSON.stringify({report,brand:{phone:brand.phone,email:brand.email,area:brand.area}})).run();
+ }
+ return pdfResponse(bytes,`Finch-CCTV-Report-${inspectionDate}.pdf`);
 }
 if(path==='estimate/preview'){const clip=(v:unknown,max:number)=>typeof v==='string'?v.trim().slice(0,max):'';const now=Date.now();const ip=req.headers.get('x-finch-client-ip')||'local';const hits=(previewHits.get(ip)||[]).filter(t=>now-t<600000);if(hits.length>=20)return json({error:'Please wait a few minutes before downloading another estimate.'},429);hits.push(now);previewHits.set(ip,hits);const plan=body.plan?validatePlan(body.plan):null;const catalog=await products();const cctv=body.cctv?buildCctv(body.cctv,catalog):null;const calculation=cctv?cctv.calculation:calculate(plan?[{id:`service-${planDefinitions[plan.service].index}`,quantity:1}]:body.items,catalog);if(!calculation.lines.length)throw new Error('Add an item before downloading an estimate.');const pdf=await createEstimatePdf({name:clip(body.name,100),phone:clip(body.phone,40),location:clip(body.location,200),notes:clip(body.notes,3000),calculation,...(cctv?{cctvSummary:cctv.summary}:{}),...(plan?{planSummary:planSummary(plan)}:{}),createdAt:now},await settings());return body.format==='base64'?json({pdf:Buffer.from(pdf).toString('base64')}):pdfResponse(pdf,'Finch-estimate.pdf');}
 if(path==='plan'){const plan=validatePlan(body.plan);const calculation=calculate([{id:`service-${planDefinitions[plan.service].index}`,quantity:1}],await products());return json({plan,summary:planSummary(plan),calculation});}
