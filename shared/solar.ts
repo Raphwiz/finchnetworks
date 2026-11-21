@@ -58,7 +58,14 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
  }
  if(read('extraWatts',100000)&&!read('extraHours',24))missing.push('Other appliances');
  const direct=read('totalWatts',100000);
- if(direct){runningWatts=direct;const hours=read('dailyHours',24);if(!hours)missing.push('Daily use for total load');dailyWh=direct*hours;}
+ if(direct){
+  runningWatts=direct;
+  motorStart=0;
+  missing.length=0;
+  const hours=read('dailyHours',24);
+  if(!hours)missing.push('Daily use for total load');
+  dailyWh=direct*hours;
+ }
  const duration=read('backup',168);
  if(!runningWatts||!duration||missing.length)return {ready:false as const,reason:missing.length?`Enter wattage and daily use for: ${missing.join(', ')}.`:'Enter your appliance loads (or total watts) and required backup duration.',calculation:{lines:[],subtotal:0,hasUnpriced:true,note:'Complete your power requirements to size a system.'} satisfies Calculation};
  const headroom=Math.max(20,c.headroom,read('headroom',100))/100;

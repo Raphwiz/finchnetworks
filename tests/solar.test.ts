@@ -27,6 +27,7 @@ assert.ok(priced.ready&&!priced.calculation.hasUnpriced);
 assert.equal(priced.calculation.subtotal,priced.calculation.lines.reduce((sum,line)=>sum+line.quantity*100,0));
 assert.equal(sizeSolar({...answers,totalWatts:'100000'},defaultSolarCatalog).ready,false);
 assert.equal(sizeSolar({backup:'4',load0qty:'2',load0hours:'4'},defaultSolarCatalog).ready,false);
+assert.equal(sizeSolar({...answers,load0qty:'2',load0watts:'',load0hours:''},defaultSolarCatalog).ready,true);
 assert.throws(()=>validateSolarCatalog({...prices,headroom:19}));
 assert.throws(()=>sizeSolar({...answers,backup:'-1'},prices));
 const legacyAnswers=Object.fromEntries(planDefinitions.solar.fields.slice(0,24).map(field=>[field.key,field.options?.[0]??'']));
