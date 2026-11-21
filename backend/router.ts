@@ -1,3 +1,5 @@
+import {solarCatalog,solarEstimate,planCalculation} from './solar';
+import {validateSolarCatalog} from '@/shared/solar';
 import {parseCameraSetups} from '@/shared/cctv-report';
 import {serviceAccountsHandle} from './service-accounts';
 import {defaultQuoteTerms} from '@/shared/commerce';
@@ -52,12 +54,29 @@ if(path.startsWith('admin/cctv-report/')&&req.method==='GET'){
  const {report,brand}=JSON.parse(row.data);
  return pdfResponse(await createCctvReportPdf({...report,issuedAt:row.issued_at},brand),`Finch-CCTV-Report-${report.inspectionDate}.pdf`);
 }
+if(path==='admin/solar'&&req.method==='GET')return json(await solarCatalog());
 if(path==='admin'&&req.method==='GET'){const rows=await database().prepare('SELECT id,reference,data,status,created_at FROM enquiries ORDER BY created_at DESC LIMIT 200').all();return json({products:await products(true),projects:await projects(true),settings:await settings(),alertsEnabled:staffAlertsEnabled(),enquiries:rows.results.map((r:any)=>({...JSON.parse(r.data),status:r.status}))});}
 if(path==='admin/upload'&&req.method==='POST'){if(Number(req.headers.get('content-length'))>8_500_000)throw new Error('Use an image smaller than 8 MB.');const form=await req.formData();const file=form.get('file');if(!(file instanceof File)||file.size>8_000_000||file.size===0)throw new Error('Choose an image up to 8 MB.');const buffer=await file.arrayBuffer();const b=new Uint8Array(buffer);const jpg=b[0]===255&&b[1]===216&&b[2]===255;const png=b[0]===137&&b[1]===80&&b[2]===78&&b[3]===71;const webp=String.fromCharCode(...b.slice(0,4))==='RIFF'&&String.fromCharCode(...b.slice(8,12))==='WEBP';if(!jpg&&!png&&!webp)throw new Error('Upload a JPG, PNG or WebP image.');const ext=jpg?'jpg':png?'png':'webp';const key=`${crypto.randomUUID()}.${ext}`;await media().put(key,buffer,{httpMetadata:{contentType:`image/${jpg?'jpeg':ext}`}});return json({url:`/api/media/${key}`});}
 }
 if(req.method!=='POST')return json({error:'Not found'},404);
 if(path!=='repairs'&&Number(req.headers.get('content-length'))>100000)return json({error:'Request too large'},413);
 const repair=path==='repairs'?await repairBody(req):null;const body=(repair?repair.body:await req.json()) as Record<string,any>; if(!body||typeof body!=='object'||Array.isArray(body))throw new Error('Invalid request.');
+if(path==='solar-sizing'){
+ const plan=validatePlan(body.plan);
+ if(plan.service!=='solar')throw Error('Choose solar power installation.');
+ return json(await solarEstimate(plan));
+}
+if(path==='admin/solar'){
+ const catalog=validateSolarCatalog(body);
+ const current=await database().prepare("SELECT data FROM settings WHERE id='solar-sizing'").first<{data:string}>();
+ if(current&&(JSON.parse(current.data).revision??0)!==(body.revision??0))return json({error:'Solar settings changed. Reload before saving.'},409);
+ const saved={...catalog,revision:Date.now()};
+ const result=current
+  ?await database().prepare("UPDATE settings SET data=? WHERE id='solar-sizing' AND data=?").bind(JSON.stringify(saved),current.data).run()
+  :await database().prepare("INSERT OR IGNORE INTO settings(id,data) VALUES ('solar-sizing',?)").bind(JSON.stringify(saved)).run();
+ if(result.meta.changes!==1)return json({error:'Solar settings changed. Reload before saving.'},409);
+ return json(saved);
+}
 if(path==='admin/cctv-report'){
  const inspectionDate=str(body.inspectionDate,10);
  const date=new Date(`${inspectionDate}T12:00:00Z`);
@@ -85,13 +104,13 @@ if(path==='admin/cctv-report'){
  }
  return pdfResponse(bytes,`Finch-CCTV-Report-${inspectionDate}.pdf`);
 }
-if(path==='estimate/preview'){const clip=(v:unknown,max:number)=>typeof v==='string'?v.trim().slice(0,max):'';const now=Date.now();const ip=req.headers.get('x-finch-client-ip')||'local';const hits=(previewHits.get(ip)||[]).filter(t=>now-t<600000);if(hits.length>=20)return json({error:'Please wait a few minutes before downloading another estimate.'},429);hits.push(now);previewHits.set(ip,hits);const plan=body.plan?validatePlan(body.plan):null;const catalog=await products();const cctv=body.cctv?buildCctv(body.cctv,catalog):null;const calculation=cctv?cctv.calculation:calculate(plan?[{id:`service-${planDefinitions[plan.service].index}`,quantity:1}]:body.items,catalog);if(!calculation.lines.length)throw new Error('Add an item before downloading an estimate.');const pdf=await createEstimatePdf({name:clip(body.name,100),phone:clip(body.phone,40),location:clip(body.location,200),notes:clip(body.notes,3000),calculation,...(cctv?{cctvSummary:cctv.summary}:{}),...(plan?{planSummary:planSummary(plan)}:{}),createdAt:now},await settings());return body.format==='base64'?json({pdf:Buffer.from(pdf).toString('base64')}):pdfResponse(pdf,'Finch-estimate.pdf');}
-if(path==='plan'){const plan=validatePlan(body.plan);const calculation=calculate([{id:`service-${planDefinitions[plan.service].index}`,quantity:1}],await products());return json({plan,summary:planSummary(plan),calculation});}
+if(path==='estimate/preview'){const clip=(v:unknown,max:number)=>typeof v==='string'?v.trim().slice(0,max):'';const now=Date.now();const ip=req.headers.get('x-finch-client-ip')||'local';const hits=(previewHits.get(ip)||[]).filter(t=>now-t<600000);if(hits.length>=20)return json({error:'Please wait a few minutes before downloading another estimate.'},429);hits.push(now);previewHits.set(ip,hits);const plan=body.plan?validatePlan(body.plan):null;const catalog=await products();const cctv=body.cctv?buildCctv(body.cctv,catalog):null;const calculation=cctv?cctv.calculation:(plan?await planCalculation(plan):calculate(body.items,catalog));if(!calculation.lines.length)throw new Error('Add an item before downloading an estimate.');const pdf=await createEstimatePdf({name:clip(body.name,100),phone:clip(body.phone,40),location:clip(body.location,200),notes:clip(body.notes,3000),calculation,...(cctv?{cctvSummary:cctv.summary}:{}),...(plan?{planSummary:planSummary(plan)}:{}),createdAt:now},await settings());return body.format==='base64'?json({pdf:Buffer.from(pdf).toString('base64')}):pdfResponse(pdf,'Finch-estimate.pdf');}
+if(path==='plan'){const plan=validatePlan(body.plan);const calculation=await planCalculation(plan);return json({plan,summary:planSummary(plan),calculation});}
 if(path==='cctv')return json(buildCctv(body.config,await products()));
 if(path==='calculate')return json(calculate(body.items,await products()));
 if(path==='enquiries'||path==='repairs'){
 if(body.website)return json({error:'Unable to submit this request.'},400);if(body.consent!==true)throw new Error('Please agree to be contacted about this request.');
-const name=str(body.name,100),phone=str(body.phone,40),location=str(body.location,200),notes=str(body.notes||'',3000);if(!name||!location||!/^\+?[\d ()-]{7,30}$/.test(phone))throw new Error('Enter your name, phone number and location.');if(body.cctv&&body.plan)throw new Error('Submit one service plan at a time.');const plan=body.plan?validatePlan(body.plan):null;const catalog=await products();const cctv=body.cctv?buildCctv(body.cctv,catalog):null;const calculation=cctv?cctv.calculation:calculate(plan?[{id:`service-${planDefinitions[plan.service].index}`,quantity:1}]:body.items,catalog);if(!calculation.lines.length&&!notes)throw new Error('Choose an item or describe your request.');
+const name=str(body.name,100),phone=str(body.phone,40),location=str(body.location,200),notes=str(body.notes||'',3000);if(!name||!location||!/^\+?[\d ()-]{7,30}$/.test(phone))throw new Error('Enter your name, phone number and location.');if(body.cctv&&body.plan)throw new Error('Submit one service plan at a time.');const plan=body.plan?validatePlan(body.plan):null;const catalog=await products();const cctv=body.cctv?buildCctv(body.cctv,catalog):null;const calculation=cctv?cctv.calculation:(plan?await planCalculation(plan):calculate(body.items,catalog));if(!calculation.lines.length&&!notes)throw new Error('Choose an item or describe your request.');
 const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(req.headers.get('x-finch-client-ip')||'local'));const rateKey=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');const recent=await database().prepare('SELECT count(*) AS n FROM enquiries WHERE rate_key=? AND created_at>?').bind(rateKey,Date.now()-600000).first<{n:number}>();if((recent?.n||0)>=5)return json({error:'Please wait a few minutes before sending another request.'},429);
 let repairPhoto='';if(repair?.photo){const key=`${crypto.randomUUID()}.${repair.photo.ext}`;await media(true).put(key,repair.photo.buffer);repairPhoto=`/api/admin/repair-photo/${key}`;}
 const id=crypto.randomUUID();const reference=`FN-${id.slice(0,8).toUpperCase()}`;const account=await currentCustomer(req);if(path==='enquiries'&&account&&await database().prepare('SELECT customer_id FROM technician_users WHERE customer_id=?').bind(account.id).first()){if(!calculation.lines.length||calculation.lines.some(l=>l.unitPrice==null))throw Error('Use Prepare customer quotation in your technician account to enter prices for unpriced work.');const submitted=await commerceHandle(new Request(new URL('/api/commerce/technician',req.url),{method:'POST',headers:{cookie:req.headers.get('cookie')||'',origin:new URL(req.url).origin,'content-type':'application/json'},body:JSON.stringify({name,phone,location,scope:notes,project:cctv?cctv.summary:plan?planSummary(plan):'Equipment estimate',lines:calculation.lines,deposit:0,terms:defaultQuoteTerms,expires:new Date(Date.now()+10*86400000).toISOString().slice(0,10)})}));if(!submitted?.ok)return submitted||json({error:'Unable to submit quotation.'},400);const quote=await submitted.json();return json({technicianQuote:true,reference:quote.reference},201);}

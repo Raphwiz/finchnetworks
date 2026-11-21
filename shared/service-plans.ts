@@ -14,6 +14,16 @@ export const planDefinitions={
   {key:`load${index}watts`,label:'Power per appliance (watts)',max:100000,unit:'watts'},
   {key:`load${index}hours`,label:'Daily use (hours)',max:24,unit:'hours'},
  ]),
+ {key:'battery',label:'Battery preference',options:['Lithium','Tubular']},
+ {key:'headroom',label:'Additional capacity allowance (%)',max:100,unit:'percent'},
+ {key:'totalWatts',label:'Total simultaneous load override (W)',max:100000,unit:'watts'},
+ {key:'dailyHours',label:'Daily use for total load (hours)',max:24,unit:'hours'},
+ {key:'extraWatts',label:'Other appliances combined load (W)',max:100000,unit:'watts'},
+ {key:'extraHours',label:'Other appliances daily use (hours)',max:24,unit:'hours'},
+ {key:'surgeWatts',label:'Measured startup load (W, optional)',max:300000,unit:'watts'},
+ {key:'pvRun',label:'Panels to inverter one-way cable route (metres)',max:200,unit:'metres'},
+ {key:'batteryRun',label:'Battery to inverter one-way cable route (metres)',max:20,unit:'metres'},
+ {key:'acRun',label:'Inverter to distribution board cable route (metres)',max:200,unit:'metres'},
 ]},
 
 'access-control':{index:5,title:'Plan your access and attendance system.',description:'Tell us how you want to manage visitors, door entry and staff attendance.',fields:[{key:'work',label:'What do you need?',options:['New installation','Upgrade existing system','Repair / maintenance']},{key:'system',label:'System required',options:['Intercom / video doorbell','Door access control','Staff attendance system','Combined access and attendance','Multiple systems - describe below','Not sure - advise me']},{key:'property',label:'Property type',options:['Office / business','Home','Apartments','School / institution','Other']},{key:'doors',label:'Doors or entry points',max:10000,unit:'entry points'},{key:'users',label:'Approximate number of users / staff',max:100000,unit:'users'},{key:'identification',label:'Preferred entry / attendance method',options:['Fingerprint','Facial recognition','Access cards','PIN / keypad','Multiple methods','Not required - intercom only','Advise me']},{key:'intercom',label:'Intercom preference',options:['Not required','Audio intercom','Video intercom','Video doorbell','Advise me']},{key:'reporting',label:'Attendance reporting',options:['Not required','Basic attendance reports','Payroll integration - compatibility to confirm','Advise me']}]},
@@ -24,14 +34,15 @@ export const planDefinitions={
 } satisfies Record<string,{index:number;title:string;description:string;fields:Field[]}>;
 export type PlanKey=keyof typeof planDefinitions;
 export type ServicePlan={service:PlanKey;answers:Record<string,string>;notes:string};
-export function validatePlan(value:unknown):ServicePlan{if(!value||typeof value!=='object')throw new Error('Choose a service plan.');const p=value as ServicePlan;if(!Object.hasOwn(planDefinitions,p.service)||!p.answers||typeof p.answers!=='object'||typeof p.notes!=='string'||p.notes.length>2000)throw new Error('Check your service details.');const answers:Record<string,string>={};for(const f of planDefinitions[p.service].fields as Field[]){const v=p.answers[f.key];if(typeof v!=='string'||v.length>150)throw new Error(`Check ${f.label.toLowerCase()}.`);if(f.options&&!f.options.includes(v))throw new Error(`Choose ${f.label.toLowerCase()}.`);if(!f.options&&v!==''&&(!Number.isFinite(Number(v))||Number(v)<0||Number(v)>(f.max||100000)||(!['metres','hours','watts'].includes(f.unit||'')&&!Number.isInteger(Number(v)))))throw new Error(`Enter a valid ${f.label.toLowerCase()}.`);answers[f.key]=v;}return {service:p.service,answers,notes:p.notes.trim()};}
-export function planSummary(p:ServicePlan){const d=planDefinitions[p.service];const energy=p.service==='solar'?solarEnergySummary(p.answers):'';return (d.fields as Field[]).map(f=>`${f.label}: ${p.answers[f.key]||'To be assessed'}${p.answers[f.key]&&f.unit?' '+f.unit:''}`).join('\n')+(energy?'\n'+energy:'')+(p.notes?'\nAdditional details: '+p.notes:'');}
+export function validatePlan(value:unknown):ServicePlan{if(!value||typeof value!=='object')throw new Error('Choose a service plan.');const p=value as ServicePlan;if(!Object.hasOwn(planDefinitions,p.service)||!p.answers||typeof p.answers!=='object'||typeof p.notes!=='string'||p.notes.length>2000)throw new Error('Check your service details.');const answers:Record<string,string>={};for(const f of planDefinitions[p.service].fields as Field[]){const v=p.answers[f.key]??(p.service==='solar'?(f.options?.[0]??''):undefined);if(typeof v!=='string'||v.length>150)throw new Error(`Check ${f.label.toLowerCase()}.`);if(p.service==='solar'&&f.key==='headroom'&&v!==''&&Number(v)<20)throw new Error('Load allowance must be at least 20%.');if(f.options&&!f.options.includes(v))throw new Error(`Choose ${f.label.toLowerCase()}.`);if(!f.options&&v!==''&&(!Number.isFinite(Number(v))||Number(v)<0||Number(v)>(f.max||100000)||(!['metres','hours','watts','percent'].includes(f.unit||'')&&!Number.isInteger(Number(v)))))throw new Error(`Enter a valid ${f.label.toLowerCase()}.`);answers[f.key]=v;}return {service:p.service,answers,notes:p.notes.trim()};}
+export function planSummary(p:ServicePlan){const d=planDefinitions[p.service];const energy=p.service==='solar'?solarEnergySummary(p.answers):'';return (d.fields as Field[]).filter(f=>p.service!=='solar'||((p.answers[f.key]||f.options)&&!(Number(p.answers.totalWatts)>0&&f.key.startsWith('load')))).map(f=>`${f.label}: ${p.answers[f.key]||'To be assessed'}${p.answers[f.key]&&f.unit?' '+f.unit:''}`).join('\n')+(energy?'\n'+energy:'')+(p.notes?'\nAdditional details: '+p.notes:'');}
 
 export function serviceThumbnail(index:number){if(index===6)return {backgroundImage:'linear-gradient(135deg, #f8d457, #f7edb8)',backgroundPosition:'center'};return index===5?{backgroundImage:"url('/access-control.svg')",backgroundSize:'cover',backgroundPosition:'center'}:{backgroundPosition:`${index*25}% center`};}
 
 export function solarEnergySummary(answers:Record<string,string>){
- let dailyWh=0;
- let complete=0;
+ if(Number(answers.totalWatts)>0&&Number(answers.dailyHours)>0)return `Indicative daily energy: ${(Number(answers.totalWatts)*Number(answers.dailyHours)/1000).toFixed(2)} kWh. Final system sizing uses the configured allowance and equipment limits.`;
+ let dailyWh=Number(answers.extraWatts||0)*Number(answers.extraHours||0);
+ let complete=dailyWh>0?1:0;
  let incomplete=false;
  for(let index=0;index<6;index++){
   const quantity=Number(answers[`load${index}qty`]);

@@ -1,0 +1,99 @@
+import type {Calculation,Line} from './models';
+
+export type SolarItem={id:string;name:string;unit:string;price:number|null;watts?:number;surgeWatts?:number;kwh?:number;maxAmps?:number;maxPvWatts?:number};
+export type SolarCatalog={revision?:number;headroom:number;sunHours:number;yieldFactor:number;inverterEfficiency:number;lithiumDod:number;tubularDod:number;inverters:SolarItem[];lithium:SolarItem[];tubular:SolarItem[];panel:SolarItem;accessories:SolarItem[]};
+const item=(id:string,name:string,unit='unit'):SolarItem=>({id,name,unit,price:null});
+export const defaultSolarCatalog:SolarCatalog={
+ headroom:20,sunHours:4,yieldFactor:.75,inverterEfficiency:.9,lithiumDod:.8,tubularDod:.5,
+ inverters:[3000,5000,8000,10000].map(watts=>({...item('solar-inverter-'+watts,`48 V hybrid inverter allowance, ${watts/1000} kW`),watts,surgeWatts:watts*2,maxPvWatts:watts*2})),
+ lithium:[{...item('solar-lithium','51.2 V lithium battery, 5.12 kWh allowance'),kwh:5.12,maxAmps:100}],
+ tubular:[{...item('solar-tubular','12 V 200 Ah tubular battery allowance'),kwh:2.4,maxAmps:20}],
+ panel:{...item('solar-panel','550 W solar panel allowance','panel'),watts:550},
+ accessories:[item('solar-rail','Mount rail, 2.4 m allowance'),item('solar-clamp','Panel mounting clamp'),item('solar-pv-cable','PV cable allowance','metre'),item('solar-battery-cable','Battery cable allowance','metre'),item('solar-ac-cable','AC cable allowance','metre'),item('solar-dc-protection','PV DC isolation, breakers, fuses and surge protection allowance','set'),item('solar-battery-protection','Battery DC fuse, isolator and protection allowance','set'),item('solar-ac-protection','AC protection and changeover allowance','set'),item('solar-earth','Earthing and bonding allowance','set'),item('solar-connectors','PV connector and termination allowance','set'),item('solar-labour','Installation, testing and commissioning allowance','service')],
+};
+
+export function validateSolarCatalog(value:unknown):SolarCatalog{
+ const c=structuredClone(value) as SolarCatalog;
+ const number=(value:unknown,min:number,max:number)=>typeof value==='number'&&Number.isFinite(value)&&value>=min&&value<=max;
+ if(!c||!number(c.headroom,20,100)||!number(c.sunHours,1,8)||!number(c.yieldFactor,.4,.95)||!number(c.inverterEfficiency,.6,.99)||!number(c.lithiumDod,.1,.95)||!number(c.tubularDod,.1,.6))throw Error('Check solar design assumptions. Headroom must be at least 20%.');
+ for(const key of ['inverters','lithium','tubular','accessories'] as const){
+  if(!Array.isArray(c[key])||!c[key].length||c[key].length>20)throw Error('Check solar equipment profiles.');
+ }
+ const all=[...c.inverters,...c.lithium,...c.tubular,c.panel,...c.accessories];
+ const ids=new Set<string>();
+ for(const part of all){
+  if(!part||typeof part.id!=='string'||!/^solar-[a-z0-9-]+$/.test(part.id)||ids.has(part.id)||typeof part.name!=='string'||!part.name.trim()||part.name.length>150||typeof part.unit!=='string'||!part.unit||part.unit.length>30||part.price!==null&&!number(part.price,0,100000000))throw Error('Check solar item names and prices.');
+  ids.add(part.id);
+ }
+ if(c.accessories.length!==defaultSolarCatalog.accessories.length||defaultSolarCatalog.accessories.some(item=>!c.accessories.some(part=>part.id===item.id)))throw Error('Keep all required accessory allowances.');
+ for(const inverter of c.inverters)if(!number(inverter.watts,100,100000)||!number(inverter.surgeWatts,inverter.watts!,300000)||!number(inverter.maxPvWatts,100,200000))throw Error('Check inverter continuous, surge and maximum PV ratings.');
+ for(const battery of [...c.lithium,...c.tubular])if(!number(battery.kwh,.1,100)||!number(battery.maxAmps,1,2000))throw Error('Check battery energy and discharge current ratings.');
+ if(!number(c.panel?.watts,50,1000))throw Error('Check panel wattage.');
+ return c;
+}
+
+export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
+ const c=validateSolarCatalog(catalog);
+ const read=(key:string,max:number)=>{
+  const raw=answers[key]??'';
+  if(raw==='')return 0;
+  const n=Number(raw);
+  if(!Number.isFinite(n)||n<0||n>max)throw Error('Check solar input '+key+'.');
+  return n;
+ };
+ let runningWatts=read('extraWatts',100000);
+ let dailyWh=runningWatts*read('extraHours',24);
+ let motorStart=0;
+ const missing:string[]=[];
+ const names=['Lights','TVs','Routers','Fridges','Computers','Pumps'];
+ for(let index=0;index<6;index++){
+  const quantity=read(`load${index}qty`,10000);
+  if(!Number.isInteger(quantity))throw Error('Appliance quantities must be whole numbers.');
+  const watts=read(`load${index}watts`,100000),hours=read(`load${index}hours`,24);
+  if(!quantity)continue;
+  if(!watts||!hours){missing.push(names[index]);continue;}
+  runningWatts+=quantity*watts;
+  dailyWh+=quantity*watts*hours;
+  if(index===3||index===5)motorStart=Math.max(motorStart,watts*2);
+ }
+ if(read('extraWatts',100000)&&!read('extraHours',24))missing.push('Other appliances');
+ const direct=read('totalWatts',100000);
+ if(direct){runningWatts=direct;const hours=read('dailyHours',24);if(!hours)missing.push('Daily use for total load');dailyWh=direct*hours;}
+ const duration=read('backup',168);
+ if(!runningWatts||!duration||missing.length)return {ready:false as const,reason:missing.length?`Enter wattage and daily use for: ${missing.join(', ')}.`:'Enter your appliance loads (or total watts) and required backup duration.',calculation:{lines:[],subtotal:0,hasUnpriced:true,note:'Complete your power requirements to size a system.'} satisfies Calculation};
+ const headroom=Math.max(20,c.headroom,read('headroom',100))/100;
+ const factor=1+headroom;
+ const designWatts=Math.ceil(runningWatts*factor);
+ const explicitSurge=read('surgeWatts',300000);
+ const requiredSurge=Math.ceil(Math.max(runningWatts+motorStart,explicitSurge||runningWatts*3)*factor);
+ const offGrid=answers.goal==='Off-grid power';
+ const backupWh=(offGrid?dailyWh*duration/24:runningWatts*duration)*factor;
+ const nominalKwh=backupWh/1000/c.inverterEfficiency/(answers.battery==='Tubular'?c.tubularDod:c.lithiumDod);
+ const pvEnergyWh=dailyWh*factor+backupWh/c.inverterEfficiency;
+ const panelCount=Math.max(2,Math.ceil(pvEnergyWh/(c.sunHours*c.yieldFactor*c.panel.watts!)));
+ const panelWatts=panelCount*c.panel.watts!;
+ const inverter=[...c.inverters].sort((a,b)=>a.watts!-b.watts!).find(part=>part.watts!>=designWatts&&part.surgeWatts!>=requiredSurge&&part.maxPvWatts!>=panelWatts);
+ if(!inverter)return {ready:false as const,reason:'This load or required solar array exceeds the configured inverter profiles. Finch needs to design a larger system or separate solar charging.',calculation:{lines:[],subtotal:0,hasUnpriced:true,note:'Custom solar system design required.'} satisfies Calculation};
+ const tubular=answers.battery==='Tubular';
+ const batteries=tubular?c.tubular:c.lithium;
+ const series=tubular?4:1;
+ const battery=[...batteries].sort((a,b)=>a.kwh!-b.kwh!)[0];
+ // Four 12 V tubular batteries form one 48 V string. Lithium profiles are 51.2 V modules.
+ const voltage=tubular?48:51.2;
+ const current=Math.max(designWatts,requiredSurge)/voltage/c.inverterEfficiency;
+ const strings=Math.max(Math.ceil(nominalKwh/(battery.kwh!*series)),Math.ceil(current/battery.maxAmps!));
+ const batteryCount=strings*series;
+ const nominalBatteryKwh=batteryCount*battery.kwh!;
+ // Recharge the required reserve in one design day, while serving the stated daily loads.
+ const pvRun=read('pvRun',200)||20, batteryRun=read('batteryRun',20)||2, acRun=read('acRun',200)||15;
+ const quantities:Record<string,number>={
+  'solar-rail':panelCount*2,'solar-clamp':panelCount*4,
+  'solar-pv-cable':Math.ceil(2*pvRun*1.2),'solar-battery-cable':Math.ceil(2*batteryRun*strings*1.2),
+  'solar-ac-cable':Math.ceil(acRun*1.2),'solar-dc-protection':1,'solar-battery-protection':strings,
+  'solar-ac-protection':1,'solar-earth':1,'solar-connectors':panelCount,'solar-labour':1,
+ };
+ const line=(part:SolarItem,quantity:number):Line=>({id:part.id,name:part.name,quantity,unit:part.unit,unitPrice:part.price,total:part.price===null?null:Math.round(part.price*quantity*100)/100});
+ const lines=[line(inverter,1),line(battery,batteryCount),line(c.panel,panelCount),...c.accessories.map(part=>line(part,quantities[part.id]))];
+ const calculation:Calculation={lines,subtotal:Math.round(lines.reduce((sum,line)=>sum+(line.total??0),0)*100)/100,hasUnpriced:lines.some(line=>line.unitPrice===null),note:`Solar budget estimate with ${headroom*100}% load headroom. Assumes all listed loads can run together, ${c.sunHours} peak sun hours, ${c.yieldFactor*100}% PV yield and ${c.inverterEfficiency*100}% inverter efficiency. ${tubular?'Tubular':'Lithium'} usable depth: ${(tubular?c.tubularDod:c.lithiumDod)*100}%. Array includes one-day reserve recovery. Rail, cable and protection quantities are allowances. Finch must confirm MPPT capacity, PV strings, surge duration, battery compatibility, charging limits, cable sizes, protection ratings, mounting and site yield before approving the final quotation. Taxes and site-specific work are confirmed in the quotation.`};
+ return {ready:true as const,runningWatts,designWatts,requiredSurge,dailyKwh:dailyWh/1000,headroom:headroom*100,inverter,battery,batteryCount,strings,nominalBatteryKwh,requiredBatteryKwh:nominalKwh,panelCount,panelWatts,duration,offGrid,calculation};
+}
