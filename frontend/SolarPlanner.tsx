@@ -18,26 +18,31 @@ export default function SolarPlanner(){
  const [sizing,setSizing]=useState<ReturnType<typeof sizeSolar>|null>(null);
  const [sizingError,setSizingError]=useState('');
  const [calculating,setCalculating]=useState(false);
+ const [totalMode,setTotalMode]=useState(false);
+ const activeAnswers:Record<string,string>={...answers,totalWatts:totalMode?answers.totalWatts:'',dailyHours:totalMode?answers.dailyHours:''};
+ if(totalMode){
+  for(const item of [...definition.fields.slice(6,24),...definition.fields.slice(28,30)])activeAnswers[item.key]='';
+ }
  useEffect(()=>{
   if(owner===undefined)return;
   try{
    const raw=new URLSearchParams(location.search).get('plan');
    const saved=raw?JSON.parse(raw):readDraft(owner,'plan-solar');
-   if(saved){const plan=validatePlan(saved);if(plan.service!=='solar')throw Error();setAnswers(plan.answers);setNotes(plan.notes);}
+   if(saved){const plan=validatePlan(saved);if(plan.service!=='solar')throw Error();setAnswers(plan.answers);setNotes(plan.notes);setTotalMode(typeof saved.totalMode==='boolean'?saved.totalMode:Number(plan.answers.totalWatts)>0);}
   }catch{setError('Please check your saved solar requirements.');}
   setReady(true);
  },[owner]);
- useEffect(()=>{if(ready)saveDraft(owner,'plan-solar',{service:'solar',answers,notes:''});},[ready,owner,answers]);
+ useEffect(()=>{if(ready)saveDraft(owner,'plan-solar',{service:'solar',answers,notes:'',totalMode});},[ready,owner,answers,totalMode]);
  useEffect(()=>{
   if(!ready)return;
   let active=true;
   setCalculating(true);setSizing(null);setSizingError('');
   const timer=setTimeout(()=>{
-   api('solar-sizing',{plan:{service:'solar',answers,notes:''}}).then(result=>{if(active)setSizing(result);}).catch(error=>{if(active)setSizingError(error.message);}).finally(()=>{if(active)setCalculating(false);});
+   api('solar-sizing',{plan:{service:'solar',answers:activeAnswers,notes:''}}).then(result=>{if(active)setSizing(result);}).catch(error=>{if(active)setSizingError(error.message);}).finally(()=>{if(active)setCalculating(false);});
   },350);
   return()=>{active=false;clearTimeout(timer);};
- },[ready,answers]);
- const plan:ServicePlan={service:'solar',answers,notes};
+ },[ready,answers,totalMode]);
+ const plan:ServicePlan={service:'solar',answers:activeAnswers,notes};
  const field=(item:typeof definition.fields[number])=><label key={item.key}>{item.label}
   {item.options?<select value={answers[item.key]} onChange={event=>setAnswers({...answers,[item.key]:event.target.value})}>
    {item.options.map(option=><option key={option}>{option}</option>)}
@@ -52,10 +57,12 @@ export default function SolarPlanner(){
   <div className="form-grid">{definition.fields.slice(24,26).map(field)}</div>
   {answers.goal==='Off-grid power'&&<section className="panel form"><h2>Night-time battery needs</h2><p>Enter the equipment load that runs after sunset and its operating hours. Leave night watts blank to use your full running load. Daily appliance hours must include both daytime and night-time use.</p><div className="form-grid">{definition.fields.filter(item=>['nightWatts','nightHours'].includes(item.key)).map(field)}</div><p className="helper">Batteries cover the entered night use. Panels supply daytime loads and recharge the overnight reserve. The load allowance applies to both.</p></section>}
   {answers.goal!=='Off-grid power'&&<section>{definition.fields.filter(item=>item.key==='rechargeDays').map(field)}<p className="helper">Blank uses one solar day. Choose a longer recovery period for a multi-day backup reserve when appropriate.</p></section>}
-  <details><summary>Enter a total wattage instead of individual appliances</summary><p>A total wattage replaces the appliance load calculation below. Use the combined watts of equipment that may operate at the same time.</p><div className="form-grid">{definition.fields.slice(26,28).map(field)}</div></details>
+  <details open={totalMode} onToggle={event=>setTotalMode(event.currentTarget.open)}><summary>Enter a total wattage instead of individual appliances</summary><p>Use the combined watts of equipment that may operate at the same time. Close this section to return to individual appliances.</p><fieldset disabled={!totalMode} className="form-grid" style={{border:0,padding:0,margin:0}}>{definition.fields.slice(26,28).map(field)}</fieldset></details>
+  {!totalMode&&<>
   <h2>Appliances to power</h2><p className="helper">Use actual running watts and daily operating hours. For fridges and other cycling equipment, use compressor running hours rather than 24 hours continuously, or enter measured daily kWh below. Leave uncertain values blank for Finch to assess.</p>
   {['Lights','TVs','Routers','Fridges','Computers','Pumps'].map((name,index)=><fieldset className="panel" key={name}><legend>{name}</legend><div className="form-grid">{definition.fields.slice(6+index*3,9+index*3).map(field)}</div></fieldset>)}
   <div className="form-grid">{definition.fields.slice(28,30).map(field)}</div>
+  </>}
   {definition.fields.filter(item=>item.key==='dailyKwh').map(field)}
   <p className="helper">Measured daily kWh replaces the hours-based energy calculation. Keep appliance watts or total simultaneous watts for inverter sizing. Use energy for the equipment this solar system will power.</p>
   <details><summary>Startup load and cable routes</summary><p>Enter the measured or manufacturer-specified combined startup load when known. Motor and compressor starting VA and surge duration need verification. Cable routes default to 20 m, 2 m and 15 m respectively, with a 20% routing allowance.</p><div className="form-grid">{definition.fields.slice(30,34).map(field)}</div></details>
