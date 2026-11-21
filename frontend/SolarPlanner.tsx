@@ -50,18 +50,22 @@ export default function SolarPlanner(){
  }}>
   <h2>Your property and power needs</h2><div className="form-grid">{definition.fields.slice(0,6).filter(item=>answers.goal!=='Off-grid power'||item.key!=='backup').map(field)}</div>
   <div className="form-grid">{definition.fields.slice(24,26).map(field)}</div>
-  {answers.goal==='Off-grid power'&&<section className="panel form"><h2>Night-time battery needs</h2><p>Enter the equipment load that runs after sunset and its operating hours. Leave night watts blank to use your full running load. Daily appliance hours must include both daytime and night-time use.</p><div className="form-grid">{definition.fields.slice(34).map(field)}</div><p className="helper">Batteries cover the entered night use. Panels supply daytime loads and recharge the overnight reserve. The load allowance applies to both.</p></section>}
+  {answers.goal==='Off-grid power'&&<section className="panel form"><h2>Night-time battery needs</h2><p>Enter the equipment load that runs after sunset and its operating hours. Leave night watts blank to use your full running load. Daily appliance hours must include both daytime and night-time use.</p><div className="form-grid">{definition.fields.filter(item=>['nightWatts','nightHours'].includes(item.key)).map(field)}</div><p className="helper">Batteries cover the entered night use. Panels supply daytime loads and recharge the overnight reserve. The load allowance applies to both.</p></section>}
+  {answers.goal!=='Off-grid power'&&<section>{definition.fields.filter(item=>item.key==='rechargeDays').map(field)}<p className="helper">Blank uses one solar day. Choose a longer recovery period for a multi-day backup reserve when appropriate.</p></section>}
   <details><summary>Enter a total wattage instead of individual appliances</summary><p>A total wattage replaces the appliance load calculation below. Use the combined watts of equipment that may operate at the same time.</p><div className="form-grid">{definition.fields.slice(26,28).map(field)}</div></details>
-  <h2>Appliances to power</h2><p className="helper">Use the wattage on the appliance label if you know it. Leave uncertain values blank for Finch to assess. For backup, include the appliances you need during outages.</p>
+  <h2>Appliances to power</h2><p className="helper">Use actual running watts and daily operating hours. For fridges and other cycling equipment, use compressor running hours rather than 24 hours continuously, or enter measured daily kWh below. Leave uncertain values blank for Finch to assess.</p>
   {['Lights','TVs','Routers','Fridges','Computers','Pumps'].map((name,index)=><fieldset className="panel" key={name}><legend>{name}</legend><div className="form-grid">{definition.fields.slice(6+index*3,9+index*3).map(field)}</div></fieldset>)}
   <div className="form-grid">{definition.fields.slice(28,30).map(field)}</div>
-  <details><summary>Startup load and cable routes</summary><p>Leave routes blank to use cable allowances of 20 m from panels, 2 m from batteries and 15 m to the distribution board. Cable lengths include 20% routing allowance. Without a measured startup load, a conservative three-times-running-load allowance is used.</p><div className="form-grid">{definition.fields.slice(30,34).map(field)}</div></details>
+  {definition.fields.filter(item=>item.key==='dailyKwh').map(field)}
+  <p className="helper">Measured daily kWh replaces the hours-based energy calculation. Keep appliance watts or total simultaneous watts for inverter sizing. Use energy for the equipment this solar system will power.</p>
+  <details><summary>Startup load and cable routes</summary><p>Enter the measured or manufacturer-specified combined startup load when known. Motor and compressor starting VA and surge duration need verification. Cable routes default to 20 m, 2 m and 15 m respectively, with a 20% routing allowance.</p><div className="form-grid">{definition.fields.slice(30,34).map(field)}</div></details>
   <section className="panel form" aria-label="Suggested solar system" aria-live="polite">
    <h2>Suggested system and estimate</h2>
    {calculating&&<p role="status">Calculating your solar system…</p>}
    {sizingError&&<p className="error">{sizingError}</p>}
    {sizing&&!sizing.ready&&<p>{sizing.reason}</p>}
    {sizing?.ready&&<>
+    <p className="notice">Budget sizing — installation design needs verification.</p>
     <dl className="admin-order-contact">
      <div><dt>Your simultaneous load</dt><dd>{sizing.runningWatts.toLocaleString()} W</dd></div>
      <div><dt>Design load with {sizing.headroom}% allowance</dt><dd>{sizing.designWatts.toLocaleString()} W</dd></div>
@@ -74,9 +78,13 @@ export default function SolarPlanner(){
     </dl>
     <p className="helper">Lithium uses compatible 51.2 V modules. Tubular batteries use strings of four 12 V units. Battery quantities allow for usable capacity and discharge current.</p>
     {sizing.calculation.lines.map(line=><div className="summary-line" key={line.id}><span>{line.quantity} {line.unit} × {line.name}</span><strong>{line.total===null?'Price to confirm':money(line.total)}</strong></div>)}
-    <div className="total"><span>{sizing.calculation.hasUnpriced?'Priced items subtotal':'Estimated total'}</span><strong>{money(sizing.calculation.subtotal)}</strong></div>
+    <div className="total"><span>{sizing.calculation.hasUnpriced?'Priced items subtotal':'Estimated budget total'}</span><strong>{money(sizing.calculation.subtotal)}</strong></div>
     {sizing.calculation.hasUnpriced&&<p className="notice">Some material prices need Finch confirmation. A complete estimated total appears once all prices are configured.</p>}
-    <p className="helper">{sizing.calculation.note}</p>
+    <details><summary>Calculation and verification details</summary>
+     <p>Daily energy = sum of watts × quantities × daily operating hours. Battery capacity = stored-load energy × allowance ÷ inverter efficiency ÷ usable depth. Panels = PV energy ÷ peak sun hours ÷ DC derate ÷ panel watts, rounded up once.</p>
+     <p>Required PV power before rounding: {(sizing.requiredPvWatts/1000).toFixed(2)} kWp.</p>
+     <p className="helper">{sizing.calculation.note}</p>
+    </details>
    </>}
   </section>
   <label>Other appliances and additional requirements<textarea rows={4} maxLength={2000} value={notes} onChange={event=>setNotes(event.target.value)} placeholder="Other equipment, quantities, daily usage, site location or anything you need help with."/></label>
