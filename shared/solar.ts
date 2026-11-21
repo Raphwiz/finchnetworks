@@ -95,8 +95,10 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
  const battery=[...batteries].sort((a,b)=>a.kwh!-b.kwh!)[0];
  // Four 12 V tubular batteries form one 48 V string. Lithium profiles are 51.2 V modules.
  const voltage=tubular?48:51.2;
- const current=designWatts/voltage/c.inverterEfficiency;
- const surgeCurrent=requiredSurge/voltage/c.inverterEfficiency;
+ const batteryLoadWatts=offGrid?nightWatts*factor:designWatts;
+ const batterySurgeWatts=offGrid?Math.max(nightWatts*3,explicitSurge)*factor:requiredSurge;
+ const current=batteryLoadWatts/voltage/c.inverterEfficiency;
+ const surgeCurrent=batterySurgeWatts/voltage/c.inverterEfficiency;
  const strings=Math.max(Math.ceil(nominalKwh/(battery.kwh!*series)),Math.ceil(current/battery.maxAmps!),Math.ceil(surgeCurrent/battery.maxSurgeAmps!));
  const batteryCount=strings*series;
  const nominalBatteryKwh=batteryCount*battery.kwh!;
@@ -109,7 +111,7 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
   'solar-ac-protection':1,'solar-earth':1,'solar-connectors':panelCount,'solar-labour':1,
  };
  const line=(part:SolarItem,quantity:number):Line=>({id:part.id,name:part.name,quantity,unit:part.unit,unitPrice:part.price,total:part.price===null?null:Math.round(part.price*quantity*100)/100});
- const lines=[line(inverter,1),line(battery,batteryCount),line(c.panel,panelCount),...c.accessories.map(part=>line(part,quantities[part.id]))];
+ const lines=[line(inverter,1),line(battery,batteryCount),line(c.panel,panelCount),...c.accessories.map(part=>line(part,quantities[part.id]))].filter(line=>line.quantity>0);
  const energyNote=offGrid?`Off-grid batteries cover ${nightWatts} W for ${duration} night hours (${(nightWh/1000).toFixed(2)} kWh before allowance). Daytime solar serves ${(daytimeWh/1000).toFixed(2)} kWh of loads and recharges that night reserve each day.`:'Array includes one-day backup reserve recovery.';
  const calculation:Calculation={lines,subtotal:Math.round(lines.reduce((sum,line)=>sum+(line.total??0),0)*100)/100,hasUnpriced:lines.some(line=>line.unitPrice===null),note:`Solar budget estimate with ${headroom*100}% load headroom. Assumes all listed loads can run together, ${c.sunHours} peak sun hours, ${c.yieldFactor*100}% PV yield and ${c.inverterEfficiency*100}% inverter efficiency. ${tubular?'Tubular':'Lithium'} usable depth: ${(tubular?c.tubularDod:c.lithiumDod)*100}%. ${energyNote} Rail, cable and protection quantities are allowances. Finch must confirm MPPT capacity, PV strings, surge duration, battery compatibility, charging limits, cable sizes, protection ratings, mounting and site yield before approving the final quotation. Taxes and site-specific work are confirmed in the quotation.`};
  return {ready:true as const,runningWatts,designWatts,requiredSurge,dailyKwh:dailyWh/1000,daytimeKwh:daytimeWh/1000,nightKwh:nightWh/1000,nightWatts,headroom:headroom*100,inverter,battery,batteryCount,strings,nominalBatteryKwh,requiredBatteryKwh:nominalKwh,panelCount,panelWatts,duration,offGrid,calculation};

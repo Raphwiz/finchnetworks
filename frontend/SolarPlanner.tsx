@@ -67,7 +67,7 @@ export default function SolarPlanner(){
      <div><dt>Design load with {sizing.headroom}% allowance</dt><dd>{sizing.designWatts.toLocaleString()} W</dd></div>
      <div><dt>Estimated daily use</dt><dd>{sizing.dailyKwh.toFixed(2)} kWh</dd></div>
      <div><dt>Inverter</dt><dd>{sizing.inverter.watts!/1000} kW · {sizing.inverter.surgeWatts!/1000} kW surge</dd></div>
-     <div><dt>Battery bank</dt><dd>{sizing.batteryCount} × {sizing.battery.name} · {sizing.nominalBatteryKwh.toFixed(2)} kWh nominal</dd></div>
+     <div><dt>Battery bank</dt><dd>{sizing.batteryCount>0?<>{sizing.batteryCount} × {sizing.battery.name} · {sizing.nominalBatteryKwh.toFixed(2)} kWh nominal</>:'No night-time storage required; battery-free inverter operation needs Finch confirmation.'}</dd></div>
      <div><dt>Solar array</dt><dd>{sizing.panelCount} panels · {(sizing.panelWatts/1000).toFixed(2)} kWp</dd></div>
      <div><dt>{sizing.offGrid?'Night-time duration':'Backup duration'}</dt><dd>{sizing.duration} hours {sizing.offGrid?`at ${sizing.nightWatts.toLocaleString()} W`:'at the full stated running load'}</dd></div>
      {sizing.offGrid&&<><div><dt>Night-time energy before allowance</dt><dd>{sizing.nightKwh.toFixed(2)} kWh</dd></div><div><dt>Daytime energy supplied by solar</dt><dd>{sizing.daytimeKwh.toFixed(2)} kWh</dd></div></>}
