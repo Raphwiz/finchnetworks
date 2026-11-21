@@ -70,17 +70,21 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
   if(!hours)missing.push('Daily use for total load');
   dailyWh=direct*hours;
  }
- const duration=read('backup',168);
- if(!runningWatts||!duration||missing.length)return {ready:false as const,reason:missing.length?`Enter wattage and daily use for: ${missing.join(', ')}.`:'Enter your appliance loads (or total watts) and required backup duration.',calculation:{lines:[],subtotal:0,hasUnpriced:true,note:'Complete your power requirements to size a system.'} satisfies Calculation};
+ const offGrid=answers.goal==='Off-grid power';
+ const duration=offGrid?read('nightHours',24):read('backup',168);
+ const nightWatts=offGrid?(answers.nightWatts===''||answers.nightWatts===undefined?runningWatts:read('nightWatts',100000)):0;
+ const nightWh=nightWatts*duration;
+ if(!runningWatts||!duration||missing.length)return {ready:false as const,reason:missing.length?`Enter wattage and daily use for: ${missing.join(', ')}.`:offGrid?'Enter your loads, daily usage and night-time operating hours. Night watts can be left blank to use the full running load.':'Enter your appliance loads (or total watts) and required backup duration.',calculation:{lines:[],subtotal:0,hasUnpriced:true,note:'Complete your power requirements to size a system.'} satisfies Calculation};
+ if(offGrid&&(nightWatts>runningWatts||nightWh>dailyWh+.001))return {ready:false as const,reason:'Night-time use must fit within your total daily use. Check the night load, night hours and daily appliance hours.',calculation:{lines:[],subtotal:0,hasUnpriced:true,note:'Check day and night energy requirements.'} satisfies Calculation};
  const headroom=Math.max(20,c.headroom,read('headroom',100))/100;
  const factor=1+headroom;
  const designWatts=Math.ceil(runningWatts*factor);
  const explicitSurge=read('surgeWatts',300000);
  const requiredSurge=Math.ceil(Math.max(runningWatts+motorStart,explicitSurge||runningWatts*3)*factor);
- const offGrid=answers.goal==='Off-grid power';
- const backupWh=(offGrid?dailyWh*duration/24:runningWatts*duration)*factor;
+ const backupWh=(offGrid?nightWh:runningWatts*duration)*factor;
  const nominalKwh=backupWh/1000/c.inverterEfficiency/(answers.battery==='Tubular'?c.tubularDod:c.lithiumDod);
- const pvEnergyWh=dailyWh*factor+backupWh/c.inverterEfficiency;
+ const daytimeWh=offGrid?Math.max(0,dailyWh-nightWh):dailyWh;
+ const pvEnergyWh=daytimeWh*factor+backupWh/c.inverterEfficiency;
  const panelCount=Math.max(2,Math.ceil(pvEnergyWh/(c.sunHours*c.yieldFactor*c.panel.watts!)));
  const panelWatts=panelCount*c.panel.watts!;
  const inverter=[...c.inverters].sort((a,b)=>a.watts!-b.watts!).find(part=>part.watts!>=designWatts&&part.surgeWatts!>=requiredSurge&&part.maxPvWatts!>=panelWatts);
@@ -96,7 +100,7 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
  const strings=Math.max(Math.ceil(nominalKwh/(battery.kwh!*series)),Math.ceil(current/battery.maxAmps!),Math.ceil(surgeCurrent/battery.maxSurgeAmps!));
  const batteryCount=strings*series;
  const nominalBatteryKwh=batteryCount*battery.kwh!;
- // Recharge the required reserve in one design day, while serving the stated daily loads.
+ // Solar serves daytime demand directly and recharges the overnight battery reserve.
  const pvRun=read('pvRun',200)||20, batteryRun=read('batteryRun',20)||2, acRun=read('acRun',200)||15;
  const quantities:Record<string,number>={
   'solar-rail':panelCount*2,'solar-clamp':panelCount*4,
@@ -106,6 +110,7 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
  };
  const line=(part:SolarItem,quantity:number):Line=>({id:part.id,name:part.name,quantity,unit:part.unit,unitPrice:part.price,total:part.price===null?null:Math.round(part.price*quantity*100)/100});
  const lines=[line(inverter,1),line(battery,batteryCount),line(c.panel,panelCount),...c.accessories.map(part=>line(part,quantities[part.id]))];
- const calculation:Calculation={lines,subtotal:Math.round(lines.reduce((sum,line)=>sum+(line.total??0),0)*100)/100,hasUnpriced:lines.some(line=>line.unitPrice===null),note:`Solar budget estimate with ${headroom*100}% load headroom. Assumes all listed loads can run together, ${c.sunHours} peak sun hours, ${c.yieldFactor*100}% PV yield and ${c.inverterEfficiency*100}% inverter efficiency. ${tubular?'Tubular':'Lithium'} usable depth: ${(tubular?c.tubularDod:c.lithiumDod)*100}%. Array includes one-day reserve recovery. Rail, cable and protection quantities are allowances. Finch must confirm MPPT capacity, PV strings, surge duration, battery compatibility, charging limits, cable sizes, protection ratings, mounting and site yield before approving the final quotation. Taxes and site-specific work are confirmed in the quotation.`};
- return {ready:true as const,runningWatts,designWatts,requiredSurge,dailyKwh:dailyWh/1000,headroom:headroom*100,inverter,battery,batteryCount,strings,nominalBatteryKwh,requiredBatteryKwh:nominalKwh,panelCount,panelWatts,duration,offGrid,calculation};
+ const energyNote=offGrid?`Off-grid batteries cover ${nightWatts} W for ${duration} night hours (${(nightWh/1000).toFixed(2)} kWh before allowance). Daytime solar serves ${(daytimeWh/1000).toFixed(2)} kWh of loads and recharges that night reserve each day.`:'Array includes one-day backup reserve recovery.';
+ const calculation:Calculation={lines,subtotal:Math.round(lines.reduce((sum,line)=>sum+(line.total??0),0)*100)/100,hasUnpriced:lines.some(line=>line.unitPrice===null),note:`Solar budget estimate with ${headroom*100}% load headroom. Assumes all listed loads can run together, ${c.sunHours} peak sun hours, ${c.yieldFactor*100}% PV yield and ${c.inverterEfficiency*100}% inverter efficiency. ${tubular?'Tubular':'Lithium'} usable depth: ${(tubular?c.tubularDod:c.lithiumDod)*100}%. ${energyNote} Rail, cable and protection quantities are allowances. Finch must confirm MPPT capacity, PV strings, surge duration, battery compatibility, charging limits, cable sizes, protection ratings, mounting and site yield before approving the final quotation. Taxes and site-specific work are confirmed in the quotation.`};
+ return {ready:true as const,runningWatts,designWatts,requiredSurge,dailyKwh:dailyWh/1000,daytimeKwh:daytimeWh/1000,nightKwh:nightWh/1000,nightWatts,headroom:headroom*100,inverter,battery,batteryCount,strings,nominalBatteryKwh,requiredBatteryKwh:nominalKwh,panelCount,panelWatts,duration,offGrid,calculation};
 }

@@ -48,13 +48,14 @@ export default function SolarPlanner(){
  <form className="panel form" onSubmit={event=>{
   event.preventDefault();try{const checked=validatePlan(plan);location.assign('/estimate?plan='+encodeURIComponent(JSON.stringify(checked)));}catch{setError('Check your quantities and usage hours.');}
  }}>
-  <h2>Your property and power needs</h2><div className="form-grid">{definition.fields.slice(0,6).map(field)}</div>
+  <h2>Your property and power needs</h2><div className="form-grid">{definition.fields.slice(0,6).filter(item=>answers.goal!=='Off-grid power'||item.key!=='backup').map(field)}</div>
   <div className="form-grid">{definition.fields.slice(24,26).map(field)}</div>
+  {answers.goal==='Off-grid power'&&<section className="panel form"><h2>Night-time battery needs</h2><p>Enter the equipment load that runs after sunset and its operating hours. Leave night watts blank to use your full running load. Daily appliance hours must include both daytime and night-time use.</p><div className="form-grid">{definition.fields.slice(34).map(field)}</div><p className="helper">Batteries cover the entered night use. Panels supply daytime loads and recharge the overnight reserve. The load allowance applies to both.</p></section>}
   <details><summary>Enter a total wattage instead of individual appliances</summary><p>A total wattage replaces the appliance load calculation below. Use the combined watts of equipment that may operate at the same time.</p><div className="form-grid">{definition.fields.slice(26,28).map(field)}</div></details>
   <h2>Appliances to power</h2><p className="helper">Use the wattage on the appliance label if you know it. Leave uncertain values blank for Finch to assess. For backup, include the appliances you need during outages.</p>
   {['Lights','TVs','Routers','Fridges','Computers','Pumps'].map((name,index)=><fieldset className="panel" key={name}><legend>{name}</legend><div className="form-grid">{definition.fields.slice(6+index*3,9+index*3).map(field)}</div></fieldset>)}
   <div className="form-grid">{definition.fields.slice(28,30).map(field)}</div>
-  <details><summary>Startup load and cable routes</summary><p>Leave routes blank to use cable allowances of 20 m from panels, 2 m from batteries and 15 m to the distribution board. Cable lengths include 20% routing allowance. Without a measured startup load, a conservative three-times-running-load allowance is used.</p><div className="form-grid">{definition.fields.slice(30).map(field)}</div></details>
+  <details><summary>Startup load and cable routes</summary><p>Leave routes blank to use cable allowances of 20 m from panels, 2 m from batteries and 15 m to the distribution board. Cable lengths include 20% routing allowance. Without a measured startup load, a conservative three-times-running-load allowance is used.</p><div className="form-grid">{definition.fields.slice(30,34).map(field)}</div></details>
   <section className="panel form" aria-label="Suggested solar system" aria-live="polite">
    <h2>Suggested system and estimate</h2>
    {calculating&&<p role="status">Calculating your solar system…</p>}
@@ -68,7 +69,8 @@ export default function SolarPlanner(){
      <div><dt>Inverter</dt><dd>{sizing.inverter.watts!/1000} kW · {sizing.inverter.surgeWatts!/1000} kW surge</dd></div>
      <div><dt>Battery bank</dt><dd>{sizing.batteryCount} × {sizing.battery.name} · {sizing.nominalBatteryKwh.toFixed(2)} kWh nominal</dd></div>
      <div><dt>Solar array</dt><dd>{sizing.panelCount} panels · {(sizing.panelWatts/1000).toFixed(2)} kWp</dd></div>
-     <div><dt>{sizing.offGrid?'Off-grid autonomy':'Backup duration'}</dt><dd>{sizing.duration} hours {sizing.offGrid?'at the entered daily usage':'at the full stated running load'}</dd></div>
+     <div><dt>{sizing.offGrid?'Night-time duration':'Backup duration'}</dt><dd>{sizing.duration} hours {sizing.offGrid?`at ${sizing.nightWatts.toLocaleString()} W`:'at the full stated running load'}</dd></div>
+     {sizing.offGrid&&<><div><dt>Night-time energy before allowance</dt><dd>{sizing.nightKwh.toFixed(2)} kWh</dd></div><div><dt>Daytime energy supplied by solar</dt><dd>{sizing.daytimeKwh.toFixed(2)} kWh</dd></div></>}
     </dl>
     <p className="helper">Lithium uses compatible 51.2 V modules. Tubular batteries use strings of four 12 V units. Battery quantities allow for usable capacity and discharge current.</p>
     {sizing.calculation.lines.map(line=><div className="summary-line" key={line.id}><span>{line.quantity} {line.unit} × {line.name}</span><strong>{line.total===null?'Price to confirm':money(line.total)}</strong></div>)}
