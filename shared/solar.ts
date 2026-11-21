@@ -1,13 +1,13 @@
 import type {Calculation,Line} from './models';
 
-export type SolarItem={id:string;name:string;unit:string;price:number|null;watts?:number;surgeWatts?:number;kwh?:number;maxAmps?:number;maxPvWatts?:number};
+export type SolarItem={id:string;name:string;unit:string;price:number|null;watts?:number;surgeWatts?:number;kwh?:number;maxAmps?:number;maxSurgeAmps?:number;maxPvWatts?:number};
 export type SolarCatalog={revision?:number;headroom:number;sunHours:number;yieldFactor:number;inverterEfficiency:number;lithiumDod:number;tubularDod:number;inverters:SolarItem[];lithium:SolarItem[];tubular:SolarItem[];panel:SolarItem;accessories:SolarItem[]};
 const item=(id:string,name:string,unit='unit'):SolarItem=>({id,name,unit,price:null});
 export const defaultSolarCatalog:SolarCatalog={
  headroom:20,sunHours:4,yieldFactor:.75,inverterEfficiency:.9,lithiumDod:.8,tubularDod:.5,
  inverters:[3000,5000,8000,10000].map(watts=>({...item('solar-inverter-'+watts,`48 V hybrid inverter allowance, ${watts/1000} kW`),watts,surgeWatts:watts*2,maxPvWatts:watts*2})),
- lithium:[{...item('solar-lithium','51.2 V lithium battery, 5.12 kWh allowance'),kwh:5.12,maxAmps:100}],
- tubular:[{...item('solar-tubular','12 V 200 Ah tubular battery allowance'),kwh:2.4,maxAmps:20}],
+ lithium:[{...item('solar-lithium','51.2 V lithium battery, 5.12 kWh allowance'),kwh:5.12,maxAmps:100,maxSurgeAmps:200}],
+ tubular:[{...item('solar-tubular','12 V 200 Ah tubular battery allowance'),kwh:2.4,maxAmps:20,maxSurgeAmps:100}],
  panel:{...item('solar-panel','550 W solar panel allowance','panel'),watts:550},
  accessories:[item('solar-rail','Mount rail, 2.4 m allowance'),item('solar-clamp','Panel mounting clamp'),item('solar-pv-cable','PV cable allowance','metre'),item('solar-battery-cable','Battery cable allowance','metre'),item('solar-ac-cable','AC cable allowance','metre'),item('solar-dc-protection','PV DC isolation, breakers, fuses and surge protection allowance','set'),item('solar-battery-protection','Battery DC fuse, isolator and protection allowance','set'),item('solar-ac-protection','AC protection and changeover allowance','set'),item('solar-earth','Earthing and bonding allowance','set'),item('solar-connectors','PV connector and termination allowance','set'),item('solar-labour','Installation, testing and commissioning allowance','service')],
 };
@@ -27,7 +27,11 @@ export function validateSolarCatalog(value:unknown):SolarCatalog{
  }
  if(c.accessories.length!==defaultSolarCatalog.accessories.length||defaultSolarCatalog.accessories.some(item=>!c.accessories.some(part=>part.id===item.id)))throw Error('Keep all required accessory allowances.');
  for(const inverter of c.inverters)if(!number(inverter.watts,100,100000)||!number(inverter.surgeWatts,inverter.watts!,300000)||!number(inverter.maxPvWatts,100,200000))throw Error('Check inverter continuous, surge and maximum PV ratings.');
- for(const battery of [...c.lithium,...c.tubular])if(!number(battery.kwh,.1,100)||!number(battery.maxAmps,1,2000))throw Error('Check battery energy and discharge current ratings.');
+ for(const battery of [...c.lithium,...c.tubular]){
+  // Existing configured profiles use their continuous limit for surge until updated.
+  battery.maxSurgeAmps??=battery.maxAmps;
+  if(!number(battery.kwh,.1,100)||!number(battery.maxAmps,1,2000)||!number(battery.maxSurgeAmps,battery.maxAmps!,5000))throw Error('Check battery energy, continuous discharge and surge current ratings.');
+ }
  if(!number(c.panel?.watts,50,1000))throw Error('Check panel wattage.');
  return c;
 }
@@ -87,8 +91,9 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
  const battery=[...batteries].sort((a,b)=>a.kwh!-b.kwh!)[0];
  // Four 12 V tubular batteries form one 48 V string. Lithium profiles are 51.2 V modules.
  const voltage=tubular?48:51.2;
- const current=Math.max(designWatts,requiredSurge)/voltage/c.inverterEfficiency;
- const strings=Math.max(Math.ceil(nominalKwh/(battery.kwh!*series)),Math.ceil(current/battery.maxAmps!));
+ const current=designWatts/voltage/c.inverterEfficiency;
+ const surgeCurrent=requiredSurge/voltage/c.inverterEfficiency;
+ const strings=Math.max(Math.ceil(nominalKwh/(battery.kwh!*series)),Math.ceil(current/battery.maxAmps!),Math.ceil(surgeCurrent/battery.maxSurgeAmps!));
  const batteryCount=strings*series;
  const nominalBatteryKwh=batteryCount*battery.kwh!;
  // Recharge the required reserve in one design day, while serving the stated daily loads.

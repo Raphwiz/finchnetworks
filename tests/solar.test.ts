@@ -18,6 +18,7 @@ const higher=sizeSolar({...answers,headroom:'40'},defaultSolarCatalog);
 assert.ok(higher.ready&&higher.designWatts===1400);
 const tubular=sizeSolar({...answers,battery:'Tubular'},defaultSolarCatalog);
 assert.ok(tubular.ready&&tubular.batteryCount%4===0&&tubular.nominalBatteryKwh*.5*.9>=4*1.2);
+assert.ok(tubular.ready&&tubular.batteryCount===8);
 const offGrid=sizeSolar({...answers,goal:'Off-grid power',backup:'48'},defaultSolarCatalog);
 assert.ok(offGrid.ready&&offGrid.requiredBatteryKwh> sized.requiredBatteryKwh);
 const prices=structuredClone(defaultSolarCatalog);
