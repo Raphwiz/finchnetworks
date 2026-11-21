@@ -10,7 +10,7 @@ export default function SolarSettings(){
  const updateItem=(id:string,field:keyof SolarItem,value:string)=>{
   if(!catalog)return;
   const update=(part:SolarItem)=>part.id===id?{...part,[field]:field==='name'?value:field==='verified'?value==='true':value===''?null:Number(value)}:part;
-  setCatalog({...catalog,inverters:catalog.inverters.map(update),lithium:catalog.lithium.map(update),tubular:catalog.tubular.map(update),panel:update(catalog.panel),accessories:catalog.accessories.map(update)});
+  setCatalog({...catalog,inverters:catalog.inverters.map(update),lithium:catalog.lithium.map(update),tubular:catalog.tubular.map(update),panel:update(catalog.panel),panel625:catalog.panel625?update(catalog.panel625):undefined,accessories:catalog.accessories.map(update)});
   setMessage('');
  };
  const equipment=(title:string,items:SolarItem[])=><section><h3>{title}</h3>{items.map(part=><fieldset className="panel form" key={part.id}><legend>{part.name}</legend><div className="form-grid">
@@ -30,7 +30,7 @@ export default function SolarSettings(){
  {equipment('Hybrid inverter profiles',catalog.inverters)}
  {equipment('Lithium batteries',catalog.lithium)}
  {equipment('Tubular batteries',catalog.tubular)}
- {equipment('Solar panels',[catalog.panel])}
+ {equipment('Solar panels — separate prices for 550 W and 625 W',[catalog.panel,catalog.panel625!])}
  {equipment('Mounting, wiring, protection and installation allowances',catalog.accessories)}
  <p className="helper">Leave prices blank until confirmed. Blank prices are shown as needing a price, and cannot produce a complete estimated total.</p>
  {message&&<p className="notice" role="status">{message}</p>}

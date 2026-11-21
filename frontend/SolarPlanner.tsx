@@ -53,7 +53,7 @@ export default function SolarPlanner(){
  <form className="panel form" onSubmit={event=>{
   event.preventDefault();try{const checked=validatePlan(plan);location.assign('/estimate?plan='+encodeURIComponent(JSON.stringify(checked)));}catch{setError('Check your quantities and usage hours.');}
  }}>
-  <h2>Your property and power needs</h2><div className="form-grid">{definition.fields.slice(0,6).filter(item=>answers.goal!=='Off-grid power'||item.key!=='backup').map(field)}</div>
+  <h2>Your property and power needs</h2><div className="form-grid">{definition.fields.slice(0,6).filter(item=>answers.goal!=='Off-grid power'||item.key!=='backup').map(field)}{definition.fields.filter(item=>item.key==='panelWattage').map(field)}</div>
   <div className="form-grid">{definition.fields.slice(24,26).map(field)}</div>
   {answers.goal==='Off-grid power'&&<section className="panel form"><h2>Night-time battery needs</h2><p>Enter the equipment load that runs after sunset and its operating hours. Leave night watts blank to use your full running load. Daily appliance hours must include both daytime and night-time use.</p><div className="form-grid">{definition.fields.filter(item=>['nightWatts','nightHours'].includes(item.key)).map(field)}</div><p className="helper">Batteries cover the entered night use. Panels supply daytime loads and recharge the overnight reserve. The load allowance applies to both.</p></section>}
   {answers.goal!=='Off-grid power'&&<section>{definition.fields.filter(item=>item.key==='rechargeDays').map(field)}<p className="helper">Blank uses one solar day. Choose a longer recovery period for a multi-day backup reserve when appropriate.</p></section>}
@@ -79,7 +79,7 @@ export default function SolarPlanner(){
      <div><dt>Estimated daily use</dt><dd>{sizing.dailyKwh.toFixed(2)} kWh</dd></div>
      <div><dt>Inverter</dt><dd>{sizing.inverter.watts!/1000} kW · {sizing.inverter.surgeWatts!/1000} kW surge</dd></div>
      <div><dt>Battery bank</dt><dd>{sizing.batteryCount>0?<>{sizing.batteryCount} × {sizing.battery.name} · {sizing.nominalBatteryKwh.toFixed(2)} kWh nominal</>:'No night-time storage required; battery-free inverter operation needs Finch confirmation.'}</dd></div>
-     <div><dt>Solar array</dt><dd>{sizing.panelCount} panels · {(sizing.panelWatts/1000).toFixed(2)} kWp</dd></div>
+     <div><dt>Solar array</dt><dd>{sizing.panelCount} × {sizing.panel.watts} W panels · {(sizing.panelWatts/1000).toFixed(2)} kWp</dd></div>
      <div><dt>{sizing.offGrid?'Night-time duration':'Backup duration'}</dt><dd>{sizing.duration} hours {sizing.offGrid?`at ${sizing.nightWatts.toLocaleString()} W`:'at the full stated running load'}</dd></div>
      {sizing.offGrid&&<><div><dt>Night-time energy before allowance</dt><dd>{sizing.nightKwh.toFixed(2)} kWh</dd></div><div><dt>Daytime energy supplied by solar</dt><dd>{sizing.daytimeKwh.toFixed(2)} kWh</dd></div></>}
     </dl>

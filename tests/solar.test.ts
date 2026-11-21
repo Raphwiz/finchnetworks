@@ -76,4 +76,23 @@ assert.throws(()=>validateSolarCatalog({...prices,headroom:19}));
 assert.throws(()=>sizeSolar({...answers,backup:'-1'},prices));
 const legacyAnswers=Object.fromEntries(planDefinitions.solar.fields.slice(0,24).map(field=>[field.key,field.options?.[0]??'']));
 assert.equal(validatePlan({service:'solar',answers:legacyAnswers,notes:''}).answers.battery,'Lithium');
+assert.equal(validatePlan({service:'solar',answers:legacyAnswers,notes:''}).answers.panelWattage,'550 W');
+const panelPrices=structuredClone(prices);
+panelPrices.panel625!.price=150;
+const largerPanels=sizeSolar({...answers,panelWattage:'625 W'},panelPrices);
+assert.ok(largerPanels.ready);
+if(largerPanels.ready){
+ assert.equal(largerPanels.panelCount,Math.ceil(sized.requiredPvWatts/625));
+ assert.equal(largerPanels.panelWatts,largerPanels.panelCount*625);
+ assert.equal(largerPanels.requiredPvWatts,sized.requiredPvWatts);
+ assert.equal(largerPanels.batteryCount,sized.batteryCount);
+ assert.equal(largerPanels.calculation.lines.find(line=>line.id==='solar-panel-625')!.unitPrice,150);
+ assert.ok(!largerPanels.calculation.lines.some(line=>line.id==='solar-panel'));
+ assert.equal(largerPanels.calculation.lines.find(line=>line.id==='solar-rail')!.quantity,largerPanels.panelCount*2);
+}
+const oldPanels=structuredClone(prices);
+delete oldPanels.panel625;
+assert.equal(validateSolarCatalog(oldPanels).panel.price,100);
+assert.equal(validateSolarCatalog(oldPanels).panel625!.price,null);
+assert.throws(()=>sizeSolar({...answers,panelWattage:'700 W'},prices));
 console.log('PASS: headroom, inverter and PV capacity, battery capacity/current, tubular strings, off-grid autonomy, prices and legacy plans.');

@@ -1,7 +1,7 @@
 import type {Calculation,Line} from './models';
 
 export type SolarItem={id:string;name:string;unit:string;price:number|null;watts?:number;surgeWatts?:number;kwh?:number;maxAmps?:number;maxSurgeAmps?:number;maxPvWatts?:number;verified?:boolean};
-export type SolarCatalog={revision?:number;headroom:number;sunHours:number;yieldFactor:number;inverterEfficiency:number;lithiumDod:number;tubularDod:number;lithiumRoundTrip?:number;tubularRoundTrip?:number;resourceVerified?:boolean;inverters:SolarItem[];lithium:SolarItem[];tubular:SolarItem[];panel:SolarItem;accessories:SolarItem[]};
+export type SolarCatalog={revision?:number;headroom:number;sunHours:number;yieldFactor:number;inverterEfficiency:number;lithiumDod:number;tubularDod:number;lithiumRoundTrip?:number;tubularRoundTrip?:number;resourceVerified?:boolean;inverters:SolarItem[];lithium:SolarItem[];tubular:SolarItem[];panel:SolarItem;panel625?:SolarItem;accessories:SolarItem[]};
 const item=(id:string,name:string,unit='unit'):SolarItem=>({id,name,unit,price:null});
 export const defaultSolarCatalog:SolarCatalog={
  headroom:20,sunHours:4,yieldFactor:.86,inverterEfficiency:.96,lithiumDod:.8,tubularDod:.5,lithiumRoundTrip:.92,tubularRoundTrip:.8,resourceVerified:false,
@@ -9,6 +9,7 @@ export const defaultSolarCatalog:SolarCatalog={
  lithium:[{...item('solar-lithium','51.2 V lithium battery, 5.12 kWh allowance'),kwh:5.12,maxAmps:100,maxSurgeAmps:200}],
  tubular:[{...item('solar-tubular','12 V 200 Ah tubular battery allowance'),kwh:2.4,maxAmps:20,maxSurgeAmps:100}],
  panel:{...item('solar-panel','550 W solar panel allowance','panel'),watts:550},
+ panel625:{...item('solar-panel-625','625 W solar panel allowance','panel'),watts:625,verified:false},
  accessories:[item('solar-rail','Mount rail, 2.4 m allowance'),item('solar-clamp','Panel mounting clamp'),item('solar-pv-cable','PV cable allowance','metre'),item('solar-battery-cable','Battery cable allowance','metre'),item('solar-ac-cable','AC cable allowance','metre'),item('solar-dc-protection','PV DC isolation, breakers, fuses and surge protection allowance','set'),item('solar-battery-protection','Battery DC fuse, isolator and protection allowance','set'),item('solar-ac-protection','AC protection and changeover allowance','set'),item('solar-earth','Earthing and bonding allowance','set'),item('solar-connectors','PV connector and termination allowance','set'),item('solar-labour','Installation, testing and commissioning allowance','service')],
 };
 
@@ -17,6 +18,7 @@ export function validateSolarCatalog(value:unknown):SolarCatalog{
  if(!c||typeof c!=='object')throw Error('Check solar equipment configuration.');
  c.lithiumRoundTrip??=.92;
  c.tubularRoundTrip??=.8;
+ c.panel625??=structuredClone(defaultSolarCatalog.panel625!);
  const number=(value:unknown,min:number,max:number)=>typeof value==='number'&&Number.isFinite(value)&&value>=min&&value<=max;
  if(!c||!number(c.headroom,20,100)||!number(c.sunHours,1,8)||!number(c.yieldFactor,.4,.95)||!number(c.inverterEfficiency,.6,.99)||!number(c.lithiumDod,.1,.95)||!number(c.tubularDod,.1,.6))throw Error('Check solar design assumptions. Headroom must be at least 20%.');
  if(!number(c.lithiumRoundTrip,.5,1)||!number(c.tubularRoundTrip,.4,1))throw Error('Check battery round-trip energy efficiency.');
@@ -24,7 +26,7 @@ export function validateSolarCatalog(value:unknown):SolarCatalog{
  for(const key of ['inverters','lithium','tubular','accessories'] as const){
   if(!Array.isArray(c[key])||!c[key].length||c[key].length>20)throw Error('Check solar equipment profiles.');
  }
- const all=[...c.inverters,...c.lithium,...c.tubular,c.panel,...c.accessories];
+ const all=[...c.inverters,...c.lithium,...c.tubular,c.panel,c.panel625,...c.accessories];
  const ids=new Set<string>();
  for(const part of all){
   if(!part||typeof part.id!=='string'||!/^solar-[a-z0-9-]+$/.test(part.id)||ids.has(part.id)||typeof part.name!=='string'||!part.name.trim()||part.name.length>150||typeof part.unit!=='string'||!part.unit||part.unit.length>30||part.price!==null&&!number(part.price,0,100000000))throw Error('Check solar item names and prices.');
@@ -39,11 +41,17 @@ export function validateSolarCatalog(value:unknown):SolarCatalog{
   if(!number(battery.kwh,.1,100)||!number(battery.maxAmps,1,2000)||!number(battery.maxSurgeAmps,battery.maxAmps!,5000))throw Error('Check battery energy, continuous discharge and surge current ratings.');
  }
  if(!number(c.panel?.watts,50,1000))throw Error('Check panel wattage.');
+ if(!number(c.panel625?.watts,50,1000))throw Error('Check 625 W panel profile wattage.');
  return c;
 }
 
 export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
  const c=validateSolarCatalog(catalog);
+ const panelChoice=answers.panelWattage||'550 W';
+ if(panelChoice!=='550 W'&&panelChoice!=='625 W')throw Error('Choose a 550 W or 625 W solar panel.');
+ const panel=panelChoice==='625 W'?c.panel625!:c.panel;
+ const selectedWatts=panelChoice==='625 W'?625:550;
+ if(panel.watts!==selectedWatts)throw Error(`The ${panelChoice} profile needs the matching wattage configured by Finch.`);
  const read=(key:string,max:number)=>{
   const raw=answers[key]??'';
   if(raw==='')return 0;
@@ -103,8 +111,8 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
  // Convert AC demand to PV DC energy once. The DC yield factor excludes
  // inverter and battery losses, which are accounted for separately here.
  const pvEnergyWh=(directSolarWh+storageLoadWh/roundTrip)*factor/c.inverterEfficiency;
- const panelCount=Math.max(1,Math.ceil(pvEnergyWh/(c.sunHours*c.yieldFactor*c.panel.watts!)));
- const panelWatts=panelCount*c.panel.watts!;
+ const panelCount=Math.max(1,Math.ceil(pvEnergyWh/(c.sunHours*c.yieldFactor*panel.watts!)));
+ const panelWatts=panelCount*panel.watts!;
  const inverter=[...c.inverters].sort((a,b)=>a.watts!-b.watts!).find(part=>part.watts!>=designWatts&&part.surgeWatts!>=requiredSurge);
  if(!inverter)return {ready:false as const,reason:'This load exceeds the configured inverter continuous or measured startup rating. Finch needs to select a suitable model.',calculation:{lines:[],subtotal:0,hasUnpriced:true,note:'Custom solar system design required.'} satisfies Calculation};
  const tubular=answers.battery==='Tubular';
@@ -135,11 +143,11 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
   'solar-ac-protection':1,'solar-earth':1,'solar-connectors':panelCount,'solar-labour':1,
  };
  const line=(part:SolarItem,quantity:number):Line=>({id:part.id,name:part.name,quantity,unit:part.unit,unitPrice:part.price,total:part.price===null?null:Math.round(part.price*quantity*100)/100});
- const lines=[line(inverter,1),line(battery,batteryCount),line(c.panel,panelCount),...c.accessories.map(part=>line(part,quantities[part.id]))].filter(line=>line.quantity>0);
+ const lines=[line(inverter,1),line(battery,batteryCount),line(panel,panelCount),...c.accessories.map(part=>line(part,quantities[part.id]))].filter(line=>line.quantity>0);
  const reviewReasons:string[]=[];
  if(!explicitSurge&&(hasMotor||direct>0||Number(answers.extraWatts)>0))reviewReasons.push('Startup demand is unverified. Check motor/compressor starting VA, power factor and surge duration before choosing the final inverter.');
  if(!c.resourceVerified)reviewReasons.push('Peak sun hours, temperature and shading assumptions need site-specific design-month validation.');
- if(!inverter.verified||!battery.verified||!c.panel.verified)reviewReasons.push('Generic equipment profiles need confirmation against the actual manufacturer datasheets.');
+ if(!inverter.verified||!battery.verified||!panel.verified)reviewReasons.push('Generic equipment profiles need confirmation against the actual manufacturer datasheets.');
  if(!inverter.maxPvWatts)reviewReasons.push('The inverter/MPPT PV input power limit has not been confirmed.');
  else if(panelWatts>inverter.maxPvWatts){
   reviewReasons.push('The energy-sized array exceeds the selected inverter PV limit. Select compatible solar charging or another verified inverter; do not connect this array as shown.');
@@ -148,5 +156,5 @@ export function sizeSolar(answers:Record<string,string>,catalog:SolarCatalog){
  reviewReasons.push('PV series/parallel layout, cold Voc, hot Vmp, input current, charging current, cable sizing and mounting are subject to installation design.');
  const energyNote=offGrid?`Off-grid batteries cover ${nightWatts} W for ${duration} night hours (${(nightWh/1000).toFixed(2)} kWh before allowance). Solar serves ${(daytimeWh/1000).toFixed(2)} kWh of daytime loads and recharges the night reserve.`:`Backup reserve recovery is designed over ${rechargeDays} solar day(s). Stored energy already in the daily usage is counted once.`;
  const calculation:Calculation={lines,subtotal:Math.round(lines.reduce((sum,line)=>sum+(line.total??0),0)*100)/100,hasUnpriced:lines.some(line=>line.unitPrice===null),note:`Budget sizing with ${headroom*100}% explicit load allowance. ${c.sunHours} peak sun hours/day; ${c.yieldFactor*100}% DC PV derate; ${c.inverterEfficiency*100}% inverter efficiency; ${roundTrip*100}% battery round-trip efficiency. Battery usable depth: ${(tubular?c.tubularDod:c.lithiumDod)*100}%. Each loss factor is applied once. Required PV: ${(pvEnergyWh/c.sunHours/c.yieldFactor/1000).toFixed(2)} kWp before whole-panel rounding. ${energyNote} Generic equipment, rail, cable, protection and labour entries are budget allowances. ${reviewReasons.join(' ')} Taxes and site work are confirmed in the quotation.`};
- return {ready:true as const,runningWatts,designWatts,requiredSurge,dailyKwh:dailyWh/1000,daytimeKwh:daytimeWh/1000,nightKwh:nightWh/1000,nightWatts,headroom:headroom*100,inverter,battery,batteryCount,strings,nominalBatteryKwh,requiredBatteryKwh:nominalKwh,panelCount,panelWatts,duration,offGrid,requiredPvWatts:pvEnergyWh/c.sunHours/c.yieldFactor,pvEnergyWh,rechargeDays,reviewReasons,calculation};
+ return {ready:true as const,runningWatts,designWatts,requiredSurge,dailyKwh:dailyWh/1000,daytimeKwh:daytimeWh/1000,nightKwh:nightWh/1000,nightWatts,headroom:headroom*100,inverter,battery,batteryCount,strings,nominalBatteryKwh,requiredBatteryKwh:nominalKwh,panel,panelCount,panelWatts,duration,offGrid,requiredPvWatts:pvEnergyWh/c.sunHours/c.yieldFactor,pvEnergyWh,rechargeDays,reviewReasons,calculation};
 }
